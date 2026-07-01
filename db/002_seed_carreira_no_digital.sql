@@ -37,21 +37,24 @@ insert into estagiario.brands (
   -- exemplos_vencedores: vazio no início; cresce com approved_examples
   '[]'::jsonb,
 
-  -- tokens_visuais (jsonb) -- TODO: cores/fontes/logo REAIS (fonte única da verdade visual)
+  -- tokens_visuais (jsonb) -- paleta REAL derivada do logo + anúncio da marca
   '{
     "cores": {
-      "primaria": "#0B5FFF",
-      "secundaria": "#00223A",
-      "destaque": "#FFB800",
-      "texto": "#111111",
-      "fundo": "#FFFFFF"
+      "primaria": "#7A2BD4",
+      "primaria_escura": "#3D1178",
+      "destaque": "#6FE3A6",
+      "creme": "#EAF7EC",
+      "texto_claro": "#FFFFFF",
+      "texto_escuro": "#262626",
+      "barra": "#141414"
     },
     "fontes": {
-      "titulo": "Inter",
-      "corpo": "Inter"
+      "titulo": "Anton",
+      "corpo": "Poppins"
     },
-    "logo": "https://SEU-BUCKET.supabase.co/storage/v1/object/public/estagiario-media/logo.png",
-    "espacamento": {"base": 48}
+    "logo": "https://SEU-BUCKET.supabase.co/storage/v1/object/public/estagiario-media/carreira-no-digital/logo.png",
+    "logo_branco": "https://SEU-BUCKET.supabase.co/storage/v1/object/public/estagiario-media/carreira-no-digital/logo-branco.png",
+    "espacamento": {"base": 48, "borda_card": 24}
   }'::jsonb,
 
   -- regras_design (jsonb) -- padrões escritos como dado (CLAUDE.md seção 12)
