@@ -1,12 +1,16 @@
-// POST /api/generate — o cérebro da Fatia 1.
-// Recebe o briefing, carrega a marca pelo adapter, e devolve a spec + content_id.
-// (Render dos slides + upload no Storage + gravação em content_pieces: próximos passos.)
-import { getBrand } from '@/lib/data'
+// POST /api/generate — o fluxo completo da Fatia 1.
+// briefing -> getBrand -> Claude (spec) -> render dos slides -> Storage -> content_pieces.
+import { getBrand, inserirContentPiece } from '@/lib/data'
 import { gerarSpec, type GerarInput } from '@/lib/generate'
 import { gerarContentId } from '@/lib/content-id'
-import { isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
+import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
+import { renderSlidePng } from '@/lib/render'
+import { subirImagem } from '@/lib/storage'
+import { tokensParaTemplate } from '@/lib/templates/tokens'
+import { SlideCapa } from '@/lib/templates/slide-capa'
+import { SlideConteudo } from '@/lib/templates/slide-conteudo'
 
-// Rotas de geração podem demorar (raciocínio do modelo) — Fluid Compute.
+// Rotas de geração podem demorar (raciocínio do modelo + render) — Fluid Compute.
 export const maxDuration = 300
 
 export async function POST(request: Request) {
@@ -16,10 +20,8 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato } = body as Record<
-      string,
-      unknown
-    >
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa } =
+      body as Record<string, unknown>
 
     // Validação de entrada
     if (typeof brand_id !== 'string' || !brand_id) {
@@ -41,10 +43,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // 1. Carrega a marca pelo adapter
-    const brand = await getBrand(brand_id)
+    const dim = getFormato(formato)
 
-    // 2. Gera a spec com o Claude (structured output)
+    // 1. Marca (adapter)
+    const brand = await getBrand(brand_id)
+    const tokens = tokensParaTemplate(brand.tokens_visuais)
+
+    // 2. Spec com o Claude (structured output)
     const input: GerarInput = {
       produto_id: typeof produto_id === 'string' ? produto_id : null,
       turma_id: typeof turma_id === 'string' ? turma_id : null,
@@ -55,17 +60,62 @@ export async function POST(request: Request) {
     }
     const spec = await gerarSpec(brand, input)
 
-    // 3. Gera o content_id (vira utm_content)
+    // 3. content_id (vira utm_content)
     const content_id = gerarContentId({ produto_id: input.produto_id, cidade: input.cidade, tipo })
 
-    return Response.json({
+    // 4-6. Renderiza cada slide, sobe no Storage
+    const fotoCapa = typeof foto_capa === 'string' ? foto_capa : undefined
+    const slidesAssets: { ordem: number; papel: string; url: string }[] = []
+
+    for (const slide of spec.slides) {
+      const ehCapa = slide.ordem === 1 || slide.papel === 'gancho'
+      const element = ehCapa
+        ? SlideCapa({
+            largura: dim.largura,
+            altura: dim.altura,
+            tokens,
+            titulo: slide.titulo,
+            cidade: input.cidade ?? undefined,
+            subtitulo: slide.corpo,
+            fotoUrl: fotoCapa,
+          })
+        : SlideConteudo({
+            largura: dim.largura,
+            altura: dim.altura,
+            tokens,
+            ordem: slide.ordem,
+            papel: slide.papel,
+            titulo: slide.titulo,
+            corpo: slide.corpo,
+          })
+
+      const png = await renderSlidePng(element, dim.largura, dim.altura)
+      const path = `${content_id}/slide-${String(slide.ordem).padStart(2, '0')}.png`
+      const url = await subirImagem(path, png)
+      slidesAssets.push({ ordem: slide.ordem, papel: slide.papel, url })
+    }
+
+    const assets = {
+      slides: slidesAssets,
+      legenda: spec.legenda,
+      hashtags: spec.hashtags,
+    }
+
+    // 7. Grava a peça
+    await inserirContentPiece({
       content_id,
       brand_id,
+      produto_id: input.produto_id,
+      turma_id: input.turma_id,
+      cidade: input.cidade,
       tipo,
-      formato,
-      atributos: spec.atributos,
       spec,
+      atributos: spec.atributos,
+      assets,
     })
+
+    // 8. Retorna as URLs + content_id (pra virar utm_content no Meta)
+    return Response.json({ content_id, brand_id, tipo, formato, atributos: spec.atributos, assets, spec })
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido.'
     console.error('[/api/generate] falha:', msg)
