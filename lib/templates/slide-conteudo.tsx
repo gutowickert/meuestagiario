@@ -13,6 +13,7 @@ export interface SlideConteudoProps {
   papel: string
   titulo: string
   corpo: string
+  logoUrl?: string
 }
 
 const ROTULO: Record<string, string> = {
@@ -30,10 +31,13 @@ export function SlideConteudo({
   papel,
   titulo,
   corpo,
+  logoUrl,
 }: SlideConteudoProps): ReactElement {
   const { cores, fontes } = tokens
   const u = largura / 1080
   const rotulo = `${ROTULO[papel] ?? 'Slide'} ${ordem}`
+  const logoW = 260 * u
+  const logoH = logoW / 2.745
 
   return (
     <div
@@ -47,8 +51,8 @@ export function SlideConteudo({
         fontFamily: fontes.corpo,
       }}
     >
-      {/* Rótulo do papel (pill menta) */}
-      <div style={{ display: 'flex' }}>
+      {/* Topo: rótulo (menta, esquerda) + logo (direita) */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div
           style={{
             display: 'flex',
@@ -67,6 +71,14 @@ export function SlideConteudo({
         >
           {rotulo}
         </div>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            width={logoW}
+            height={logoH}
+            style={{ width: logoW, height: logoH, objectFit: 'contain' }}
+          />
+        ) : null}
       </div>
 
       {/* Título Anton */}
@@ -111,20 +123,6 @@ export function SlideConteudo({
       </div>
 
       <div style={{ display: 'flex', flex: 1 }} />
-
-      {/* Marca no rodapé */}
-      <div
-        style={{
-          display: 'flex',
-          fontFamily: fontes.titulo,
-          fontSize: 30 * u,
-          color: cores.texto_claro,
-          opacity: 0.8,
-          textTransform: 'uppercase',
-        }}
-      >
-        Carreira no Digital
-      </div>
     </div>
   )
 }

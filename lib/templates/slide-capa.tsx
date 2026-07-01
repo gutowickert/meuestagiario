@@ -32,6 +32,7 @@ export interface SlideCapaProps {
   subtitulo?: string
   chips?: Chip[]
   fotoUrl?: string
+  logoUrl?: string
 }
 
 export function SlideCapa({
@@ -43,10 +44,13 @@ export function SlideCapa({
   subtitulo,
   chips = [],
   fotoUrl,
+  logoUrl,
 }: SlideCapaProps): ReactElement {
   const { cores, fontes } = tokens
   // Escala tipográfica proporcional à largura do canvas (base 1080).
   const u = largura / 1080
+  const logoW = 300 * u
+  const logoH = logoW / 2.745 // proporção do logo (2133x777)
 
   return (
     <div
@@ -60,6 +64,18 @@ export function SlideCapa({
         fontFamily: fontes.corpo,
       }}
     >
+      {/* Logo no topo (canto direito) */}
+      {logoUrl ? (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 * u }}>
+          <img
+            src={logoUrl}
+            width={logoW}
+            height={logoH}
+            style={{ width: logoW, height: logoH, objectFit: 'contain' }}
+          />
+        </div>
+      ) : null}
+
       {/* Título (Anton, uppercase, branco) + divisor menta */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div

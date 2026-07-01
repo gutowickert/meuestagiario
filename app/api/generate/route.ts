@@ -4,7 +4,7 @@ import { getBrand, inserirContentPiece } from '@/lib/data'
 import { gerarSpec, type GerarInput } from '@/lib/generate'
 import { gerarContentId } from '@/lib/content-id'
 import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
-import { renderSlidePng } from '@/lib/render'
+import { renderSlidePng, logoDataUri } from '@/lib/render'
 import { subirImagem } from '@/lib/storage'
 import { tokensParaTemplate } from '@/lib/templates/tokens'
 import { SlideCapa } from '@/lib/templates/slide-capa'
@@ -65,6 +65,7 @@ export async function POST(request: Request) {
 
     // 4-6. Renderiza cada slide, sobe no Storage
     const fotoCapa = typeof foto_capa === 'string' ? foto_capa : undefined
+    const logo = await logoDataUri()
     const slidesAssets: { ordem: number; papel: string; url: string }[] = []
 
     for (const slide of spec.slides) {
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
             cidade: input.cidade ?? undefined,
             subtitulo: slide.corpo,
             fotoUrl: fotoCapa,
+            logoUrl: logo,
           })
         : SlideConteudo({
             largura: dim.largura,
@@ -87,6 +89,7 @@ export async function POST(request: Request) {
             papel: slide.papel,
             titulo: slide.titulo,
             corpo: slide.corpo,
+            logoUrl: logo,
           })
 
       const png = await renderSlidePng(element, dim.largura, dim.altura)

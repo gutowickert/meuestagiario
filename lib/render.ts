@@ -27,6 +27,16 @@ async function carregarFontes(): Promise<FontDef[]> {
   return fontsCache
 }
 
+let logoCache: string | null = null
+
+/** Lê o logo branco local e devolve como data URI (embutível no @vercel/og). */
+export async function logoDataUri(): Promise<string> {
+  if (logoCache) return logoCache
+  const buf = await readFile(join(process.cwd(), 'assets/carreira-logo-branco.png'))
+  logoCache = `data:image/png;base64,${buf.toString('base64')}`
+  return logoCache
+}
+
 /** Renderiza um elemento JSX de slide num PNG (buffer). */
 export async function renderSlidePng(
   element: ReactElement,

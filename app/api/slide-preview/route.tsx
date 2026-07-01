@@ -6,6 +6,7 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getFormato, FORMATO_PADRAO, isFormatoValido } from '@/lib/formats'
+import { logoDataUri } from '@/lib/render'
 import { SlideCapa, type CapaTokens } from '@/lib/templates/slide-capa'
 
 // Tokens da Carreira No Digital (espelham o seed 002; futuramente vêm de getBrand()).
@@ -28,9 +29,10 @@ export async function GET(request: Request) {
     const fmtParam = searchParams.get('formato') ?? FORMATO_PADRAO
     const formato = getFormato(isFormatoValido(fmtParam) ? fmtParam : FORMATO_PADRAO)
 
-    const [anton, poppinsBold] = await Promise.all([
+    const [anton, poppinsBold, logo] = await Promise.all([
       readFile(join(process.cwd(), 'assets/fonts/Anton-Regular.ttf')),
       readFile(join(process.cwd(), 'assets/fonts/Poppins-Bold.ttf')),
+      logoDataUri(),
     ])
 
     return new ImageResponse(
@@ -41,6 +43,7 @@ export async function GET(request: Request) {
         titulo: 'Formação Completa em Marketing Digital',
         cidade: 'Porto Alegre – RS',
         subtitulo: 'Seu negócio no digital, pronto e rodando',
+        logoUrl: logo,
         chips: [
           { texto: '4 módulos', destaque: true },
           { texto: '4 semanas' },
