@@ -33,6 +33,7 @@ export default function Studio() {
   const [template, setTemplate] = useState(TEMPLATE_PADRAO_ID)
   const [usarLogo, setUsarLogo] = useState(true)
   const [logoPos, setLogoPos] = useState('sup_dir')
+  const [ctaObjetivo, setCtaObjetivo] = useState('whatsapp')
   const [briefing, setBriefing] = useState(
     'Anunciar a próxima turma de Anúncios para Negócios Locais, foco em dono de comércio que quer mais clientes.',
   )
@@ -94,6 +95,7 @@ export default function Studio() {
           template,
           logo: usarLogo,
           logo_pos: usarLogo ? logoPos : 'oculto',
+          cta_objetivo: ctaObjetivo,
           foto_capa: fotoCapa ?? undefined,
         }),
       })
@@ -151,6 +153,20 @@ export default function Studio() {
                     </option>
                   ))
                 )}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-neutral-400">Objetivo do CTA</span>
+              <select
+                className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 outline-none focus:border-violet-500"
+                value={ctaObjetivo}
+                onChange={(e) => setCtaObjetivo(e.target.value)}
+              >
+                <option value="whatsapp">Chamar no WhatsApp</option>
+                <option value="direct">Chamar no direct</option>
+                <option value="site">Acessar o site / link na bio</option>
+                <option value="inscricao">Se inscrever / garantir vaga</option>
+                <option value="perfil">Seguir o perfil</option>
               </select>
             </label>
             <label className="flex flex-col gap-1 text-sm">

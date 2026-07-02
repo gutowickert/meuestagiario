@@ -16,6 +16,7 @@ export interface Slide {
   papel: PapelSlide
   titulo: string
   corpo: string
+  topicos: string[] // se for lista/enumeração, cada item aqui; senão [] e usa corpo
   destaque: string // frase/estatística curta a realçar visualmente (vazio se não houver)
   direcao_visual: string // instrução de imagem/layout pro template (não gera pixel)
 }
@@ -43,6 +44,16 @@ export interface GerarInput {
   briefing: string
   tipo: TipoPeca
   formato: FormatoId
+  ctaObjetivo?: string | null // pra onde o CTA chama (whatsapp/site/inscricao/perfil/direct)
+}
+
+// Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
+export const CTA_INSTRUCAO: Record<string, string> = {
+  whatsapp: 'chamar no WhatsApp (ex.: "Chama no WhatsApp", "Manda um oi no zap")',
+  site: 'acessar o site / link na bio (ex.: "Acesse o site", "Link na bio")',
+  inscricao: 'se inscrever / garantir a vaga na turma (ex.: "Garanta sua vaga", "Inscreva-se")',
+  perfil: 'seguir o perfil e ativar as notificações',
+  direct: 'chamar no direct do Instagram (ex.: "Chama no direct")',
 }
 
 // ---- Schema do structured output ----
@@ -65,7 +76,13 @@ const SPEC_SCHEMA: Record<string, unknown> = {
           ordem: { type: 'integer', description: 'Posição do slide (1 = primeiro).' },
           papel: { type: 'string', enum: ['gancho', 'desenvolvimento', 'prova', 'cta'] },
           titulo: { type: 'string', description: 'Headline curta do slide.' },
-          corpo: { type: 'string', description: 'Texto de apoio do slide.' },
+          corpo: { type: 'string', description: 'Texto de apoio em PROSA. Use quando NÃO for uma lista. Se preencher "topicos", deixe curto ou vazio.' },
+          topicos: {
+            type: 'array',
+            items: { type: 'string' },
+            description:
+              'Se o slide for uma enumeração (ex.: "Dia 1: ...", "Dia 2: ...", passos, itens), coloque cada item como uma string curta AQUI (um por linha). Senão, array vazio []. Não repita isso no corpo.',
+          },
           destaque: {
             type: 'string',
             description:
@@ -76,7 +93,7 @@ const SPEC_SCHEMA: Record<string, unknown> = {
             description: 'Direção de imagem/layout pro template (ex.: "foto da turma sorrindo, logo no canto"). Não descreve pixels finais.',
           },
         },
-        required: ['ordem', 'papel', 'titulo', 'corpo', 'destaque', 'direcao_visual'],
+        required: ['ordem', 'papel', 'titulo', 'corpo', 'topicos', 'destaque', 'direcao_visual'],
       },
     },
     atributos: {
@@ -164,12 +181,16 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
     `Gere uma peça do tipo "${tipo.nome}" (${nslides}) no formato ${formato.nome} (${formato.proporcao}, ${formato.largura}x${formato.altura}px).`,
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
     input.produto ? `Produto alvo: ${input.produto.nome} (veja "PRODUTO EM FOCO" no contexto).` : '',
+    input.ctaObjetivo
+      ? `OBJETIVO DO CTA: a chamada final (slide de CTA + fim da legenda) deve levar a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
+      : '',
     '',
     'BRIEFING:',
     input.briefing,
     '',
     'Estruture os slides com papéis claros (gancho -> desenvolvimento/prova -> cta). O primeiro slide é o gancho.',
     'Em cada slide, escolha um "destaque" curto (a frase ou número mais forte) pra ser realçado no layout — ou deixe vazio se o slide não tiver um ponto forte único.',
+    'Quando o slide for uma lista (dias, passos, itens), use "topicos" (um item por entrada) em vez de jogar tudo no corpo — o layout formata como lista.',
     `Preencha atributos.formato exatamente com "${formato.id}".`,
   ]
     .filter(Boolean)

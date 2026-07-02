@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, template, logo, logo_pos } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, template, logo, logo_pos, cta_objetivo } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -64,6 +64,7 @@ export async function POST(request: Request) {
       briefing,
       tipo,
       formato,
+      ctaObjetivo: typeof cta_objetivo === 'string' ? cta_objetivo : null,
     }
     const spec = await gerarSpec(brand, input)
 
@@ -87,6 +88,7 @@ export async function POST(request: Request) {
         papel: slide.papel,
         titulo: slide.titulo,
         corpo: slide.corpo,
+        topicos: slide.topicos,
         destaque: slide.destaque,
         cidade: input.cidade ?? undefined,
         fotoUrl: fotoCapa,

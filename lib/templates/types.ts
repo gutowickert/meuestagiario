@@ -26,6 +26,7 @@ export interface SlideInput {
   papel: PapelSlide | string
   titulo: string
   corpo: string
+  topicos?: string[] // itens de lista (quando o slide é enumeração); senão vazio
   destaque?: string // frase/estatística-chave a realçar em cor de acento (opcional)
   cidade?: string
   fotoUrl?: string

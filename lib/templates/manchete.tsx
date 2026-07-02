@@ -49,8 +49,9 @@ function capa(input: SlideInput): ReactElement {
   )
 }
 
-// Ritmo de cores: alterna escuro / claro / roxo entre os slides pra criar
-// quebra visual (o carrossel deixa de ser um bloco monótono). CTA estoura em menta.
+// Ritmo de cores: alterna CLARO (creme) e ESCURO (roxo escuro da marca) entre os
+// slides pra criar quebra visual. CTA estoura em menta. (Sem o roxo claro que
+// "fugia do tom".)
 interface Esquema {
   bg: string
   titulo: string
@@ -65,55 +66,71 @@ function esquemaDoSlide(ordem: number, papel: string, c: SlideInput['tokens']['c
   if (papel === 'cta') {
     return { bg: c.destaque, titulo: c.texto_escuro, corpo: c.texto_escuro, accent: c.primaria, rotulo: c.texto_escuro, divisor: c.texto_escuro, claro: true }
   }
-  // Cicla entre os slides internos (o primeiro interno costuma ser ordem 2).
-  switch ((ordem - 2 + 3) % 3) {
-    case 1: // CLARO (creme) — contraste com roxo/escuro
-      return { bg: c.creme, titulo: c.primaria, corpo: c.texto_escuro, accent: c.primaria, rotulo: c.primaria, divisor: c.destaque, claro: true }
-    case 2: // ROXO sólido
-      return { bg: c.primaria, titulo: c.texto_claro, corpo: c.texto_claro, accent: c.destaque, rotulo: c.destaque, divisor: c.destaque, claro: false }
-    default: // ROXO escuro
-      return { bg: c.primaria_escura, titulo: c.texto_claro, corpo: c.texto_claro, accent: c.destaque, rotulo: c.destaque, divisor: c.destaque, claro: false }
+  // Alterna claro/escuro pela paridade (capa = 1; internos 2,3,4,5...).
+  if (ordem % 2 === 1) {
+    return { bg: c.creme, titulo: c.primaria, corpo: c.texto_escuro, accent: c.primaria, rotulo: c.primaria, divisor: c.destaque, claro: true }
   }
+  return { bg: c.primaria_escura, titulo: c.texto_claro, corpo: c.texto_claro, accent: c.destaque, rotulo: c.destaque, divisor: c.destaque, claro: false }
 }
 
-// ---- Internos: tipografia gigante + destaque em acento + ritmo de cores ----
+// Âncora vertical do conteúdo — oscila entre topo/centro/base pra o carrossel
+// não ter todo texto na mesma posição.
+const ANCORAS = ['flex-start', 'center', 'flex-end'] as const
+
+// ---- Internos: tipografia gigante + destaque + lista + posição que oscila ----
 function interno(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, ordem, papel, titulo, corpo, destaque, logoUrl, logoPos } = input
+  const { largura, altura, tokens, ordem, papel, titulo, corpo, topicos, destaque, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehProva = papel === 'prova'
   const e = esquemaDoSlide(ordem, papel, cores)
   const rotulo = `${ROTULO[papel] ?? 'Slide'} ${ordem}`
-  // Na prova, a headline já vem no acento (o número que salta).
   const corTitulo = ehProva ? e.accent : e.titulo
   const temDestaque = !!destaque && destaque.trim().length > 0
+  const lista = (topicos ?? []).filter((t) => t && t.trim().length > 0)
+  const ancora = ANCORAS[(ordem - 2 + 3) % 3] ?? 'center'
 
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', width: largura, height: altura, backgroundColor: e.bg, padding: 80 * u }}>
-      {/* Rótulo pequeno no topo */}
-      <div style={{ display: 'flex' }}>
-        <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 700, fontSize: 26 * u, letterSpacing: 2 * u, textTransform: 'uppercase', color: e.rotulo }}>
-          {rotulo}
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: ancora, width: largura, height: altura, backgroundColor: e.bg, padding: 80 * u }}>
+      {/* Bloco de conteúdo agrupado (não fica "jogado") */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {/* Rótulo */}
+        <div style={{ display: 'flex' }}>
+          <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 700, fontSize: 26 * u, letterSpacing: 2 * u, textTransform: 'uppercase', color: e.rotulo }}>
+            {rotulo}
+          </div>
         </div>
-      </div>
 
-      {/* Headline gigante — o herói do slide */}
-      <div style={{ display: 'flex', marginTop: 28 * u, fontFamily: fontes.titulo, fontSize: 96 * u, lineHeight: 0.95, color: corTitulo, textTransform: 'uppercase' }}>
-        {titulo}
-      </div>
-      <div style={{ width: 140 * u, height: 12 * u, borderRadius: 999, marginTop: 30 * u, backgroundColor: e.divisor }} />
-
-      {/* Destaque: a frase/número-chave, GRANDE e em acento */}
-      {temDestaque ? (
-        <div style={{ display: 'flex', marginTop: 40 * u, fontFamily: fontes.titulo, fontSize: 74 * u, lineHeight: 0.98, color: e.accent, textTransform: 'uppercase' }}>
-          {destaque}
+        {/* Headline gigante */}
+        <div style={{ display: 'flex', marginTop: 24 * u, fontFamily: fontes.titulo, fontSize: 92 * u, lineHeight: 0.95, color: corTitulo, textTransform: 'uppercase' }}>
+          {titulo}
         </div>
-      ) : null}
+        <div style={{ width: 140 * u, height: 12 * u, borderRadius: 999, marginTop: 26 * u, backgroundColor: e.divisor }} />
 
-      {/* Corpo de apoio, empurrado pra baixo */}
-      <div style={{ display: 'flex', flex: 1 }} />
-      <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 600, fontSize: 40 * u, lineHeight: 1.32, color: e.corpo }}>
-        {corpo}
+        {/* Destaque em acento */}
+        {temDestaque ? (
+          <div style={{ display: 'flex', marginTop: 32 * u, fontFamily: fontes.titulo, fontSize: 70 * u, lineHeight: 0.98, color: e.accent, textTransform: 'uppercase' }}>
+            {destaque}
+          </div>
+        ) : null}
+
+        {/* Lista formatada (tópicos) OU corpo em prosa */}
+        {lista.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 34 * u }}>
+            {lista.map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 18 * u }}>
+                <div style={{ display: 'flex', width: 20 * u, height: 20 * u, marginTop: 16 * u, marginRight: 22 * u, borderRadius: 6 * u, backgroundColor: e.accent }} />
+                <div style={{ display: 'flex', flex: 1, fontFamily: fontes.corpo, fontWeight: 600, fontSize: 40 * u, lineHeight: 1.25, color: e.corpo }}>
+                  {item}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : corpo ? (
+          <div style={{ display: 'flex', marginTop: 34 * u, fontFamily: fontes.corpo, fontWeight: 600, fontSize: 42 * u, lineHeight: 1.32, color: e.corpo }}>
+            {corpo}
+          </div>
+        ) : null}
       </div>
 
       {logoCanto(e.claro ? undefined : logoUrl, logoPos, largura, 0.9)}
