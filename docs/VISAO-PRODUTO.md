@@ -174,4 +174,20 @@ Isso tudo vira a **Etapa B (execução de uma peça)** do novo fluxo.
 
 ---
 
-*Documento alinhado — todas as decisões fundacionais fechadas. Ele agora guia a implementação. Próximo passo recomendado: **§9 passo 1 (modelo de contexto: tabela `produtos` + editor de marca/produtos no Studio)**, que não depende de mais nenhuma decisão e ataca direto o "tá genérico".*
+## 11. Camada de refinamento e aprendizado (copy + design)
+
+Direção do Guto (2026-07-02), a partir do uso real: o sistema não deve só **gerar e pronto** — deve **entregar um modelo pronto e deixar refinar barato**, e **aprender com o feedback**. Isso ataca o retrabalho (regerar tudo do zero) e faz a qualidade subir com o tempo.
+
+**a) Opções e substituição de copy (barato, sem gastar imagem).** Separar a geração de **copy** da **renderização da imagem**: gerar 2–3 **variações** de headline, corpo e **CTA**, o usuário escolhe/troca peça por peça, e só rende a imagem quando estiver bom. Texto é barato; pixel não. Reduz custo e retrabalho.
+
+**b) Feedback que ensina (memória viva).** O usuário precisa poder **marcar o que é bom** ("essa copy ficou incrível") e o que é ruim, por peça E por variação. Aprovado → entra em `estagiario.approved_examples` (few-shot de copy e visual); rejeitado → sinal de "não faça". É o portão do CLAUDE.md §12 + roadmap passo 5/7, trazido pra frente e no nível da **copy/variação**, não só da peça inteira.
+
+**c) Categorias de copy.** O sistema deve ter uma **taxonomia de frameworks de copy** (ex.: educativo, prova social, quebra de objeção, oferta/urgência, storytelling, comparação) e **classificar** cada post numa categoria. Isso dá vocabulário pra: variar com intenção, aprender preferências **por categoria × produto × cidade**, e escolher o layout que encaixa naquela ideia.
+
+**d) Biblioteca de templates com volume + inteligência de composição.** Reforço da meta de design: sem **muitos** templates, o agente não tem opções pra encaixar o texto e a ideia do post. Além do volume, o agente deve virar um **especialista em composição** — decidir tamanho/posição de logo e imagem conforme o conteúdo. Cresce como trilho contínuo (design deliberado, §12 do CLAUDE.md; nunca inventar identidade).
+
+> Sequência sugerida: **(a) copy/CTA em opções sem re-render** → **(b) marcar bom/ruim → approved_examples** → **(c) categorias de copy** → **(d) mais templates + composição**. (a) e (b) são as de maior retorno imediato (menos retrabalho, começa a aprender).
+
+---
+
+*Documento alinhado — decisões fundacionais fechadas; §11 registra a camada de refinamento/aprendizado (direção viva). Próximo passo de implementação a combinar com o Guto (ver §11 sequência sugerida).*
