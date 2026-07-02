@@ -43,7 +43,7 @@ values
     '[]'::jsonb, '[]'::jsonb,
     'Preencher meta de matrículas.'
   )
-on conflict (brand_id, codigo) do update set
+on conflict (brand_id, codigo) where codigo is not null do update set
   nome = excluded.nome,
   oferta = excluded.oferta,
   publico = excluded.publico;
