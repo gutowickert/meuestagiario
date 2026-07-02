@@ -26,6 +26,7 @@ export interface SlideInput {
   papel: PapelSlide | string
   titulo: string
   corpo: string
+  destaque?: string // frase/estatística-chave a realçar em cor de acento (opcional)
   cidade?: string
   fotoUrl?: string
   logoUrl?: string

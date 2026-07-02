@@ -16,6 +16,7 @@ export interface Slide {
   papel: PapelSlide
   titulo: string
   corpo: string
+  destaque: string // frase/estatística curta a realçar visualmente (vazio se não houver)
   direcao_visual: string // instrução de imagem/layout pro template (não gera pixel)
 }
 
@@ -65,12 +66,17 @@ const SPEC_SCHEMA: Record<string, unknown> = {
           papel: { type: 'string', enum: ['gancho', 'desenvolvimento', 'prova', 'cta'] },
           titulo: { type: 'string', description: 'Headline curta do slide.' },
           corpo: { type: 'string', description: 'Texto de apoio do slide.' },
+          destaque: {
+            type: 'string',
+            description:
+              'Frase OU estatística MUITO curta (2-5 palavras) pra realçar visualmente neste slide, ex.: "R$40 vira R$65 mil", "3 dias presenciais", "sai vendendo". Puxe do CORPO e NÃO repita o título. Só letras, números e pontuação comum (sem setas/emojis). Vazio ("") se o título já for a frase de impacto ou não houver nada forte a destacar.',
+          },
           direcao_visual: {
             type: 'string',
             description: 'Direção de imagem/layout pro template (ex.: "foto da turma sorrindo, logo no canto"). Não descreve pixels finais.',
           },
         },
-        required: ['ordem', 'papel', 'titulo', 'corpo', 'direcao_visual'],
+        required: ['ordem', 'papel', 'titulo', 'corpo', 'destaque', 'direcao_visual'],
       },
     },
     atributos: {
@@ -163,6 +169,7 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
     input.briefing,
     '',
     'Estruture os slides com papéis claros (gancho -> desenvolvimento/prova -> cta). O primeiro slide é o gancho.',
+    'Em cada slide, escolha um "destaque" curto (a frase ou número mais forte) pra ser realçado no layout — ou deixe vazio se o slide não tiver um ponto forte único.',
     `Preencha atributos.formato exatamente com "${formato.id}".`,
   ]
     .filter(Boolean)

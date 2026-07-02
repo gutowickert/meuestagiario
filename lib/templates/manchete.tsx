@@ -49,42 +49,74 @@ function capa(input: SlideInput): ReactElement {
   )
 }
 
-// ---- Internos: tipografia gigante sobre fundo sólido ----
+// Ritmo de cores: alterna escuro / claro / roxo entre os slides pra criar
+// quebra visual (o carrossel deixa de ser um bloco monótono). CTA estoura em menta.
+interface Esquema {
+  bg: string
+  titulo: string
+  corpo: string
+  accent: string
+  rotulo: string
+  divisor: string
+  claro: boolean // fundo claro -> logo branco fica invisível, então some
+}
+
+function esquemaDoSlide(ordem: number, papel: string, c: SlideInput['tokens']['cores']): Esquema {
+  if (papel === 'cta') {
+    return { bg: c.destaque, titulo: c.texto_escuro, corpo: c.texto_escuro, accent: c.primaria, rotulo: c.texto_escuro, divisor: c.texto_escuro, claro: true }
+  }
+  // Cicla entre os slides internos (o primeiro interno costuma ser ordem 2).
+  switch ((ordem - 2 + 3) % 3) {
+    case 1: // CLARO (creme) — contraste com roxo/escuro
+      return { bg: c.creme, titulo: c.primaria, corpo: c.texto_escuro, accent: c.primaria, rotulo: c.primaria, divisor: c.destaque, claro: true }
+    case 2: // ROXO sólido
+      return { bg: c.primaria, titulo: c.texto_claro, corpo: c.texto_claro, accent: c.destaque, rotulo: c.destaque, divisor: c.destaque, claro: false }
+    default: // ROXO escuro
+      return { bg: c.primaria_escura, titulo: c.texto_claro, corpo: c.texto_claro, accent: c.destaque, rotulo: c.destaque, divisor: c.destaque, claro: false }
+  }
+}
+
+// ---- Internos: tipografia gigante + destaque em acento + ritmo de cores ----
 function interno(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl, logoPos } = input
+  const { largura, altura, tokens, ordem, papel, titulo, corpo, destaque, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehProva = papel === 'prova'
-  const ehCta = papel === 'cta'
-
-  // CTA estoura em menta; demais slides no roxo escuro da marca.
-  const bg = ehCta ? cores.destaque : cores.primaria_escura
-  const corTitulo = ehCta ? cores.texto_escuro : ehProva ? cores.destaque : cores.texto_claro
-  const corCorpo = ehCta ? cores.texto_escuro : cores.texto_claro
+  const e = esquemaDoSlide(ordem, papel, cores)
   const rotulo = `${ROTULO[papel] ?? 'Slide'} ${ordem}`
+  // Na prova, a headline já vem no acento (o número que salta).
+  const corTitulo = ehProva ? e.accent : e.titulo
+  const temDestaque = !!destaque && destaque.trim().length > 0
 
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', width: largura, height: altura, backgroundColor: bg, padding: 80 * u }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', width: largura, height: altura, backgroundColor: e.bg, padding: 80 * u }}>
       {/* Rótulo pequeno no topo */}
       <div style={{ display: 'flex' }}>
-        <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 700, fontSize: 26 * u, letterSpacing: 2 * u, textTransform: 'uppercase', color: ehCta ? cores.texto_escuro : cores.destaque }}>
+        <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 700, fontSize: 26 * u, letterSpacing: 2 * u, textTransform: 'uppercase', color: e.rotulo }}>
           {rotulo}
         </div>
       </div>
 
       {/* Headline gigante — o herói do slide */}
-      <div style={{ display: 'flex', marginTop: 28 * u, fontFamily: fontes.titulo, fontSize: 100 * u, lineHeight: 0.95, color: corTitulo, textTransform: 'uppercase' }}>
+      <div style={{ display: 'flex', marginTop: 28 * u, fontFamily: fontes.titulo, fontSize: 96 * u, lineHeight: 0.95, color: corTitulo, textTransform: 'uppercase' }}>
         {titulo}
       </div>
-      <div style={{ width: 140 * u, height: 12 * u, borderRadius: 999, marginTop: 30 * u, backgroundColor: ehCta ? cores.texto_escuro : cores.destaque }} />
+      <div style={{ width: 140 * u, height: 12 * u, borderRadius: 999, marginTop: 30 * u, backgroundColor: e.divisor }} />
+
+      {/* Destaque: a frase/número-chave, GRANDE e em acento */}
+      {temDestaque ? (
+        <div style={{ display: 'flex', marginTop: 40 * u, fontFamily: fontes.titulo, fontSize: 74 * u, lineHeight: 0.98, color: e.accent, textTransform: 'uppercase' }}>
+          {destaque}
+        </div>
+      ) : null}
 
       {/* Corpo de apoio, empurrado pra baixo */}
       <div style={{ display: 'flex', flex: 1 }} />
-      <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 600, fontSize: 42 * u, lineHeight: 1.32, color: corCorpo }}>
+      <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 600, fontSize: 40 * u, lineHeight: 1.32, color: e.corpo }}>
         {corpo}
       </div>
 
-      {logoCanto(logoUrl, logoPos, largura, 0.9)}
+      {logoCanto(e.claro ? undefined : logoUrl, logoPos, largura, 0.9)}
     </div>
   )
 }

@@ -87,6 +87,7 @@ export async function POST(request: Request) {
         papel: slide.papel,
         titulo: slide.titulo,
         corpo: slide.corpo,
+        destaque: slide.destaque,
         cidade: input.cidade ?? undefined,
         fotoUrl: fotoCapa,
         logoUrl: logoImg,

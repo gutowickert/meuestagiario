@@ -26,9 +26,11 @@ const TOKENS: CapaTokens = {
 
 // Amostras de conteúdo por papel, só pra ver o layout.
 const AMOSTRA = {
-  capa: { ordem: 1, papel: 'gancho', titulo: 'Impulsionar post não é anúncio', corpo: 'Existe um jeito certo — e é mais simples do que parece.' },
-  conteudo: { ordem: 2, papel: 'desenvolvimento', titulo: '3 dias, sua campanha no ar', corpo: 'Dia 1: o que funciona de verdade. Dia 2: você sobe o anúncio do seu negócio. Dia 3: revisão de métricas e mentoria.' },
-  prova: { ordem: 3, papel: 'prova', titulo: 'R$40 viraram R$65 mil', corpo: 'Aluna investiu R$40 no 2º dia e vendeu um carro de R$65.000. Aconteceu na prática.' },
+  capa: { ordem: 1, papel: 'gancho', titulo: 'Impulsionar post não é anúncio', corpo: 'Existe um jeito certo — e é mais simples do que parece.', destaque: '' },
+  conteudo: { ordem: 2, papel: 'desenvolvimento', titulo: '3 dias, sua campanha no ar', corpo: 'Dia 1: o que funciona de verdade. Dia 2: você sobe o anúncio do seu negócio. Dia 3: revisão de métricas e mentoria.', destaque: '3 dias presenciais' },
+  prova: { ordem: 3, papel: 'prova', titulo: 'R$40 viraram R$65 mil', corpo: 'Aluna investiu R$40 no 2º dia e vendeu um carro de R$65.000. Aconteceu na prática.', destaque: 'vendeu na prática' },
+  roxo: { ordem: 4, papel: 'desenvolvimento', titulo: 'Sai daqui com campanha rodando', corpo: 'Nada de teoria pra guardar na gaveta. Você termina a imersão com anúncio no ar.', destaque: 'anúncio no ar' },
+  cta: { ordem: 5, papel: 'cta', titulo: 'Turma de Caxias abrindo', corpo: 'Vagas limitadas por turma. Chama no direct e garante seu lugar.', destaque: 'vagas limitadas' },
 } as const
 
 export async function GET(request: Request) {
@@ -58,6 +60,7 @@ export async function GET(request: Request) {
         papel: amostra.papel,
         titulo: amostra.titulo,
         corpo: amostra.corpo,
+        destaque: amostra.destaque,
         cidade: 'Caxias do Sul',
         logoUrl: logo,
         logoPos,
