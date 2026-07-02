@@ -17,3 +17,6 @@ export function getAnthropic(): Anthropic {
 
 // Opus para estratégia/brief (raciocínio pesado, 1x por peça — CLAUDE.md seção 8).
 export const MODEL_ESTRATEGIA = 'claude-opus-4-8'
+
+// Sonnet para a conversa/decisão do agente (rápido, várias trocas por sessão).
+export const MODEL_CONVERSA = 'claude-sonnet-5'

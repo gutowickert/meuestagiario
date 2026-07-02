@@ -123,9 +123,14 @@ export default function Studio() {
               Gere um carrossel da Carreira No Digital a partir de um briefing.
             </p>
           </div>
-          <Link href="/contexto" className="text-sm text-violet-300 hover:text-violet-200">
-            Contexto da marca →
-          </Link>
+          <div className="flex gap-4 text-sm">
+            <Link href="/chat" className="text-violet-300 hover:text-violet-200">
+              Conversa (agente)
+            </Link>
+            <Link href="/contexto" className="text-violet-300 hover:text-violet-200">
+              Contexto da marca →
+            </Link>
+          </div>
         </header>
 
         {/* Formulário */}
