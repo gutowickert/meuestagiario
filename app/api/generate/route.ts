@@ -1,6 +1,6 @@
 // POST /api/generate — o fluxo completo da Fatia 1.
 // briefing -> getBrand -> Claude (spec) -> render dos slides -> Storage -> content_pieces.
-import { getBrand, inserirContentPiece } from '@/lib/data'
+import { getBrand, resolverProduto, inserirContentPiece } from '@/lib/data'
 import { gerarSpec, type GerarInput } from '@/lib/generate'
 import { gerarContentId } from '@/lib/content-id'
 import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
@@ -49,9 +49,16 @@ export async function POST(request: Request) {
     const brand = await getBrand(brand_id)
     const tokens = tokensParaTemplate(brand.tokens_visuais)
 
+    // 1b. Produto (contexto rico). produto_id pode ser o UUID novo ou o código legado ('ANL').
+    const produtoRef = typeof produto_id === 'string' ? produto_id : null
+    const produto = produtoRef ? await resolverProduto(brand_id, produtoRef) : null
+    // Na atribuição/utm usamos o código do produto (legível no relatório do Meta).
+    const produtoAtributo = produto?.codigo ?? produtoRef
+
     // 2. Spec com o Claude (structured output)
     const input: GerarInput = {
-      produto_id: typeof produto_id === 'string' ? produto_id : null,
+      produto_id: produtoAtributo,
+      produto,
       turma_id: typeof turma_id === 'string' ? turma_id : null,
       cidade: typeof cidade === 'string' ? cidade : null,
       briefing,
@@ -61,7 +68,7 @@ export async function POST(request: Request) {
     const spec = await gerarSpec(brand, input)
 
     // 3. content_id (vira utm_content)
-    const content_id = gerarContentId({ produto_id: input.produto_id, cidade: input.cidade, tipo })
+    const content_id = gerarContentId({ produto_id: produtoAtributo, cidade: input.cidade, tipo })
 
     // 4-6. Renderiza cada slide, sobe no Storage
     const fotoCapa = typeof foto_capa === 'string' ? foto_capa : undefined

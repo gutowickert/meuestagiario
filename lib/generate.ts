@@ -4,7 +4,7 @@
 // CLAUDE.md seções 6 e 8.
 // =============================================================
 import { getAnthropic, MODEL_ESTRATEGIA } from './anthropic'
-import type { Brand } from './data'
+import type { Brand, Produto } from './data'
 import { getFormato, getTipoAtivo, type FormatoId, type TipoPeca } from './formats'
 
 // ---- Tipos da saída ----
@@ -36,6 +36,7 @@ export interface Spec {
 
 export interface GerarInput {
   produto_id?: string | null
+  produto?: Produto | null // contexto rico do produto (método/oferta/provas próprios)
   turma_id?: string | null
   cidade?: string | null
   briefing: string
@@ -115,6 +116,27 @@ function blocoMarca(brand: Brand): string {
   ].join('\n')
 }
 
+function blocoProduto(produto: Produto | null | undefined): string | null {
+  // Camada 2 específica: cada produto tem seu método/oferta/objeções próprios (VISAO §3).
+  if (!produto) return null
+  return [
+    'PRODUTO EM FOCO (a peça é sobre este produto — priorize o método, a oferta e as objeções DELE):',
+    JSON.stringify(
+      {
+        nome: produto.nome,
+        metodo: produto.metodo,
+        oferta: produto.oferta,
+        publico: produto.publico,
+        provas: produto.provas,
+        objecoes: produto.objecoes,
+        meta: produto.meta,
+      },
+      null,
+      2,
+    ),
+  ].join('\n')
+}
+
 function instrucaoSistema(): string {
   return [
     'Você é o estrategista de conteúdo do MeuEstagiario. Gera peças de marketing para negócios locais que aprendem com o que vende.',
@@ -135,7 +157,7 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
   return [
     `Gere uma peça do tipo "${tipo.nome}" (${nslides}) no formato ${formato.nome} (${formato.proporcao}, ${formato.largura}x${formato.altura}px).`,
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
-    input.produto_id ? `Produto (id): ${input.produto_id}.` : '',
+    input.produto ? `Produto alvo: ${input.produto.nome} (veja "PRODUTO EM FOCO" no contexto).` : '',
     '',
     'BRIEFING:',
     input.briefing,
@@ -153,15 +175,20 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
 export async function gerarSpec(brand: Brand, input: GerarInput): Promise<Spec> {
   const anthropic = getAnthropic()
 
+  const system: { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }[] = [
+    { type: 'text', text: instrucaoSistema() },
+    // Bloco da marca é estável por marca -> prompt caching (CLAUDE.md seção 8).
+    { type: 'text', text: blocoMarca(brand), cache_control: { type: 'ephemeral' } },
+  ]
+  const produtoBloco = blocoProduto(input.produto)
+  // Contexto do produto: estável por produto -> segundo breakpoint de cache.
+  if (produtoBloco) system.push({ type: 'text', text: produtoBloco, cache_control: { type: 'ephemeral' } })
+
   const message = await anthropic.messages.create({
     model: MODEL_ESTRATEGIA,
     max_tokens: 8000,
     thinking: { type: 'adaptive' },
-    system: [
-      { type: 'text', text: instrucaoSistema() },
-      // Bloco da marca é estável por marca -> prompt caching (CLAUDE.md seção 8).
-      { type: 'text', text: blocoMarca(brand), cache_control: { type: 'ephemeral' } },
-    ],
+    system,
     messages: [{ role: 'user', content: mensagemUsuario(brand, input) }],
     output_config: { format: { type: 'json_schema', schema: SPEC_SCHEMA } },
   })
