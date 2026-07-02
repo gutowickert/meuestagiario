@@ -147,9 +147,14 @@ export default function Contexto() {
               A base da assertividade: quanto mais rico aqui, menos genérica a saída.
             </p>
           </div>
-          <Link href="/" className="text-sm text-violet-300 hover:text-violet-200">
-            ← Studio
-          </Link>
+          <div className="flex gap-4 text-sm">
+            <Link href="/onboarding" className="text-violet-300 hover:text-violet-200">
+              Onboarding por áudio
+            </Link>
+            <Link href="/" className="text-violet-300 hover:text-violet-200">
+              Studio →
+            </Link>
+          </div>
         </header>
 
         {erro ? (
