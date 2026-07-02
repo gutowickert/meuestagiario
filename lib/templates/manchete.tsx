@@ -131,6 +131,39 @@ function internoTexto(input: SlideInput): ReactElement {
   const ancora = ANCORAS[(ordem - 2 + 3) % 3] ?? 'center'
   const lista = (topicos ?? []).filter((t) => t && t.trim())
   const temDestaque = !!destaque && destaque.trim().length > 0
+  const ehProva = papel === 'prova'
+
+  // Formato ALTO (story 9:16): divide topo/base pra preencher a tela (evita sobra).
+  const tall = altura / largura >= 1.4
+  if (tall) {
+    const base =
+      lista.length > 0
+        ? listaTopicos(lista, e.accent, e.corpo, fontes.corpo, u)
+        : corpo
+          ? (
+            <div style={{ display: 'flex', fontFamily: fontes.corpo, fontWeight: 600, fontSize: 46 * u, lineHeight: 1.32, color: e.corpo }}>
+              {corpo}
+            </div>
+          )
+          : null
+    return (
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: base ? 'space-between' : 'center', width: largura, height: altura, backgroundColor: e.bg, padding: 90 * u }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 112 * u, lineHeight: 0.94, color: ehProva ? e.accent : e.titulo, textTransform: 'uppercase' }}>
+            {titulo}
+          </div>
+          <div style={{ width: 150 * u, height: 14 * u, borderRadius: 999, marginTop: 30 * u, backgroundColor: e.divisor }} />
+          {temDestaque ? (
+            <div style={{ display: 'flex', marginTop: 34 * u, fontFamily: fontes.titulo, fontSize: 84 * u, lineHeight: 0.98, color: e.accent, textTransform: 'uppercase' }}>
+              {destaque}
+            </div>
+          ) : null}
+        </div>
+        {base}
+        {logoCanto(e.claro ? undefined : logoUrl, logoPos, largura, 0.9)}
+      </div>
+    )
+  }
 
   // Escolhe a composição pelo conteúdo -> quebra o layout fixo.
   // STAT: prova/CTA com destaque forte -> o destaque VIRA o herói (gigante).
