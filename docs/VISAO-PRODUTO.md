@@ -188,6 +188,18 @@ Direção do Guto (2026-07-02), a partir do uso real: o sistema não deve só **
 
 > Sequência sugerida: **(a) copy/CTA em opções sem re-render** → **(b) marcar bom/ruim → approved_examples** → **(c) categorias de copy** → **(d) mais templates + composição**. (a) e (b) são as de maior retorno imediato (menos retrabalho, começa a aprender).
 
+## 12. Interface final: conversa, o agente decide, WhatsApp (direção de produto)
+
+Direção do Guto (2026-07-02): **o produto final não é um monte de telas pra preencher — é uma conversa.** O usuário pede em linguagem natural e o **agente toma todas as decisões sozinho** (template, layout, composição de cada slide, objetivo do CTA, quais fotos onde, categoria de copy, mix, verba…). Ele só **pergunta quando falta informação** pra decidir — human-in-the-loop **sob demanda**, não por padrão. Entrega a peça pronta, ou faz a pergunta certa pra se embasar.
+
+**Consequências pro jeito de construir (adicionar ao escopo de tudo):**
+- **Formulários = andaime, não o produto.** O Studio e seus campos (template, CTA, logo, fotos, mix…) são o **painel de controle / modo manual / bastidor de debug** e a superfície onde a gente *constrói e valida* cada alavanca. No produto, quem move as alavancas é o **agente**.
+- **Toda alavanca nasce com política de decisão + "pergunta se faltar".** Ao criar um recurso, criamos junto: (a) como o agente **decide sozinho** (default inteligente a partir do pedido + contexto + histórico + performance) e (b) **quando e o que ele pergunta** se não tiver base pra decidir.
+- **Motor desacoplado do canal.** A camada de decisão + geração precisa ser chamável de qualquer canal. **Hoje:** web (conversa/Studio). **Futuro:** a mesma conversa rodando no **WhatsApp** do usuário com o sistema. Nada de lógica presa na UI — reforça o "motor separado" (CLAUDE.md §4).
+- **Pedido avulso (§4.2) é o embrião disso:** um ponto de entrada em linguagem natural que entende o pedido e executa. O end-state é *tudo* passar por essa conversa (planejar, gerar, refinar, aprovar), com as telas visuais (cards, agenda) como **apoio**, não como o caminho obrigatório.
+
+> Portanto: as fatias que estamos construindo (contexto, templates, opções de copy, feedback, anúncios) são as **capacidades**; a camada de conversa é o **maestro** que as aciona. Vale começar a montar a **camada de decisão do agente** (um "brain" que recebe o pedido em NL + contexto e devolve as decisões + a peça, perguntando quando travar) em paralelo, já que ela é o produto final.
+
 ---
 
-*Documento alinhado — decisões fundacionais fechadas; §11 registra a camada de refinamento/aprendizado (direção viva). Próximo passo de implementação a combinar com o Guto (ver §11 sequência sugerida).*
+*Documento alinhado — decisões fundacionais fechadas; §11 (refinamento/aprendizado) e §12 (conversa/agente/WhatsApp) são a direção viva do produto. Próximo passo de implementação a combinar com o Guto.*
