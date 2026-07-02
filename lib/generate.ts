@@ -177,20 +177,37 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
       ? `${tipo.minSlides} slide(s)`
       : `entre ${tipo.minSlides} e ${tipo.maxSlides} slides`
 
+  const ehAnuncioImagem = input.tipo === 'anuncio_imagem'
+
+  // Regra específica de anúncio de imagem única: pouco texto forte na arte,
+  // copy pesada na legenda (feedback do Guto — a arte não é textão).
+  const regraAnuncio = [
+    'ESTA É UMA IMAGEM DE ANÚNCIO (peça única). O texto NA ARTE tem que ser MÍNIMO e IMPACTANTE:',
+    '- "titulo": uma HEADLINE curta e forte (idealmente ≤ 6 palavras) — a coisa que a pessoa PRECISA ver.',
+    '- "corpo": no MÁXIMO uma linha curta (≤ 10 palavras) de apoio/oferta — ou vazio. NADA de parágrafo.',
+    '- "topicos": VAZIO. "destaque": vazio (não é usado na arte de anúncio).',
+    '- Toda a persuasão (dor, oferta, prova, urgência e o CTA) vai na LEGENDA, que deve ser uma COPY DE ANÚNCIO completa e forte.',
+    'Use papel "gancho" no slide único.',
+  ].join('\n')
+
+  const regraCarrossel = [
+    'Estruture os slides com papéis claros (gancho -> desenvolvimento/prova -> cta). O primeiro slide é o gancho.',
+    'Em cada slide, escolha um "destaque" curto (a frase ou número mais forte) pra ser realçado no layout — ou deixe vazio se o slide não tiver um ponto forte único.',
+    'Quando o slide for uma lista (dias, passos, itens), use "topicos" (um item por entrada) em vez de jogar tudo no corpo — o layout formata como lista.',
+  ].join('\n')
+
   return [
     `Gere uma peça do tipo "${tipo.nome}" (${nslides}) no formato ${formato.nome} (${formato.proporcao}, ${formato.largura}x${formato.altura}px).`,
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
     input.produto ? `Produto alvo: ${input.produto.nome} (veja "PRODUTO EM FOCO" no contexto).` : '',
     input.ctaObjetivo
-      ? `OBJETIVO DO CTA: a chamada final (slide de CTA + fim da legenda) deve levar a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
+      ? `OBJETIVO DO CTA: a chamada (na arte quando fizer sentido, e no fim da legenda) deve levar a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
       : '',
     '',
     'BRIEFING:',
     input.briefing,
     '',
-    'Estruture os slides com papéis claros (gancho -> desenvolvimento/prova -> cta). O primeiro slide é o gancho.',
-    'Em cada slide, escolha um "destaque" curto (a frase ou número mais forte) pra ser realçado no layout — ou deixe vazio se o slide não tiver um ponto forte único.',
-    'Quando o slide for uma lista (dias, passos, itens), use "topicos" (um item por entrada) em vez de jogar tudo no corpo — o layout formata como lista.',
+    ehAnuncioImagem ? regraAnuncio : regraCarrossel,
     `Preencha atributos.formato exatamente com "${formato.id}".`,
   ]
     .filter(Boolean)
