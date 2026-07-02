@@ -1,9 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 // Brand de teste (Carreira No Digital). Depois vira um seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
+
+interface ProdutoOpcao {
+  id: string
+  codigo: string | null
+  nome: string
+}
 
 interface SlideAsset {
   ordem: number
@@ -18,7 +25,8 @@ interface GenerateResult {
 
 export default function Studio() {
   const [cidade, setCidade] = useState('Caxias do Sul')
-  const [produto, setProduto] = useState('ANL')
+  const [produtos, setProdutos] = useState<ProdutoOpcao[]>([])
+  const [produto, setProduto] = useState('') // id do produto selecionado
   const [tipo, setTipo] = useState('carrossel')
   const [formato, setFormato] = useState('feed_quadrado')
   const [briefing, setBriefing] = useState(
@@ -27,6 +35,18 @@ export default function Studio() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [result, setResult] = useState<GenerateResult | null>(null)
+
+  // Carrega os produtos reais da marca (contexto), pra não anunciar "no vácuo".
+  useEffect(() => {
+    fetch(`/api/produtos?brand_id=${BRAND_ID}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const lista: ProdutoOpcao[] = d.produtos ?? []
+        setProdutos(lista)
+        if (lista[0]) setProduto((atual) => atual || lista[0].id)
+      })
+      .catch(() => {})
+  }, [])
 
   async function gerar() {
     setLoading(true)
@@ -58,13 +78,18 @@ export default function Studio() {
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-100">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            MeuEstagiário <span className="text-violet-400">Studio</span>
-          </h1>
-          <p className="mt-1 text-neutral-400">
-            Gere um carrossel da Carreira No Digital a partir de um briefing.
-          </p>
+        <header className="mb-8 flex items-end justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              MeuEstagiário <span className="text-violet-400">Studio</span>
+            </h1>
+            <p className="mt-1 text-neutral-400">
+              Gere um carrossel da Carreira No Digital a partir de um briefing.
+            </p>
+          </div>
+          <Link href="/contexto" className="text-sm text-violet-300 hover:text-violet-200">
+            Contexto da marca →
+          </Link>
         </header>
 
         {/* Formulário */}
@@ -85,10 +110,15 @@ export default function Studio() {
                 value={produto}
                 onChange={(e) => setProduto(e.target.value)}
               >
-                <option value="FC">Formação Completa (FC)</option>
-                <option value="ANL">Anúncios p/ Negócios Locais (ANL)</option>
-                <option value="MAPA">Imersão Mapa Digital</option>
-                <option value="IA">Imersão IA para Conteúdo</option>
+                {produtos.length === 0 ? (
+                  <option value="">Nenhum produto cadastrado</option>
+                ) : (
+                  produtos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.codigo ? `${p.nome} (${p.codigo})` : p.nome}
+                    </option>
+                  ))
+                )}
               </select>
             </label>
             <label className="flex flex-col gap-1 text-sm">
