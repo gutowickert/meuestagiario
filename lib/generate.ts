@@ -27,6 +27,7 @@ export interface Atributos {
   formato: string
   cta: string
   oferta: string
+  categoria: string // framework de copy usado (dor_solucao, prova_social, ...)
 }
 
 export interface Spec {
@@ -106,8 +107,13 @@ const SPEC_SCHEMA: Record<string, unknown> = {
         formato: { type: 'string', description: 'Formato da peça (será normalizado pelo sistema).' },
         cta: { type: 'string', description: 'Chamada para ação principal.' },
         oferta: { type: 'string', description: 'Oferta destacada.' },
+        categoria: {
+          type: 'string',
+          description:
+            'Framework de copy usado: dor_solucao | prova_social | quebra_objecao | oferta_urgencia | storytelling | comparacao | educativo.',
+        },
       },
-      required: ['angulo', 'gancho', 'formato', 'cta', 'oferta'],
+      required: ['angulo', 'gancho', 'formato', 'cta', 'oferta', 'categoria'],
     },
   },
   required: ['legenda', 'hashtags', 'slides', 'atributos'],
@@ -175,9 +181,25 @@ function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string | null
 
 function instrucaoSistema(): string {
   return [
-    'Você é o estrategista de conteúdo do MeuEstagiario. Gera peças de marketing para negócios locais que aprendem com o que vende.',
-    'Escreva na linguagem do público (resultado prático, presencial, cidade específica). Nada de métrica inventada.',
-    'Respeite as regras de design da marca. A "direcao_visual" orienta o template com FOTOS REAIS — não descreva geração de imagem.',
+    'Você é um COPYWRITER SÊNIOR de resposta direta, especialista em negócios locais. Sua copy faz a pessoa parar o dedo e agir.',
+    '',
+    'PRINCÍPIOS DE COPY (siga à risca):',
+    '- O 1º slide é um SCROLL-STOPPER: tensão, pergunta afiada, número ou verdade inconveniente. Nada de saudação ("Você sabia?") nem clichê.',
+    '- Uma ideia por slide. Frases curtas, ritmo, voz de quem fala na região (pt-BR informal, direto). Fale "você".',
+    '- Seja ESPECÍFICO: números, cidade, situações reais > adjetivo vago. Prova concreta vence promessa.',
+    '- PROIBIDO clichê de guru: "transforme sua vida", "descomplicar", "o segredo que ninguém te conta", "mude seu mindset", emoji em excesso.',
+    '- Nada de métrica ou depoimento inventado — use só o que veio no contexto (provas/oferta). Se não tem prova, não invente.',
+    '',
+    'FRAMEWORK: escolha o mais adequado ao briefing e ESTRUTURE a peça por ele. Registre qual usou em atributos.categoria:',
+    '- "dor_solucao" (PAS): dor → agita → vira a chave pra solução.',
+    '- "prova_social": resultados/casos reais que geram desejo e confiança.',
+    '- "quebra_objecao": pega a objeção mais forte e desmonta.',
+    '- "oferta_urgencia": oferta clara + motivo real pra agir agora (turma, vagas).',
+    '- "storytelling": um caso/jornada que ilustra a virada.',
+    '- "comparacao": nós x eles / jeito antigo x jeito certo.',
+    '- "educativo": ensina algo útil de verdade e posiciona como autoridade.',
+    '',
+    'A "direcao_visual" orienta o template com FOTOS REAIS — não descreva geração de imagem.',
     'Devolva SEMPRE no schema estruturado pedido.',
   ].join('\n')
 }

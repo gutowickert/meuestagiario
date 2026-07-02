@@ -16,6 +16,11 @@ export const CATALOGO: TemplateInfo[] = [
     descricao: 'Estilo agência: tipografia gigante, alto contraste, foto full na capa, prova em destaque e CTA que estoura.',
   },
   {
+    id: 'ousado',
+    nome: 'Ousado',
+    descricao: 'Fundo quase-preto, tipografia gigante e menta de acento. Moderno, brutalista, cara de agência.',
+  },
+  {
     id: 'editorial',
     nome: 'Editorial',
     descricao: 'Degradê da marca, títulos Anton, foto em card e número-fantasma nos passos.',

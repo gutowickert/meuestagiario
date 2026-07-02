@@ -4,6 +4,7 @@
 // A seleção que aprende (por performance) vai escolher entre estes (CLAUDE.md §12).
 // =============================================================
 import { manchete } from './manchete'
+import { ousado } from './ousado'
 import { editorial } from './editorial'
 import { bloco } from './bloco'
 import { destaque } from './destaque'
@@ -11,6 +12,7 @@ import type { Template } from './types'
 
 export const TEMPLATES: Record<string, Template> = {
   [manchete.id]: manchete,
+  [ousado.id]: ousado,
   [editorial.id]: editorial,
   [bloco.id]: bloco,
   [destaque.id]: destaque,
