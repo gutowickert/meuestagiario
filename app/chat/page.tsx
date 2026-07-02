@@ -49,7 +49,11 @@ export default function Chat() {
   const [pensando, setPensando] = useState(false)
   const [gerando, setGerando] = useState(false)
   const [subindoFoto, setSubindoFoto] = useState(false)
+  const [gravando, setGravando] = useState(false)
+  const [transcrevendo, setTranscrevendo] = useState(false)
   const fimRef = useRef<HTMLDivElement>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
   function rolarFim() {
     setTimeout(() => fimRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -72,6 +76,47 @@ export default function Chat() {
     } finally {
       setSubindoFoto(false)
     }
+  }
+
+  async function transcrever(blob: Blob) {
+    setTranscrevendo(true)
+    try {
+      const resp = await fetch('/api/transcribe', { method: 'POST', headers: { 'Content-Type': blob.type || 'audio/webm' }, body: blob })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Falha ao transcrever.')
+      const novo = (data.transcript ?? '').trim()
+      if (novo) setInput((atual) => (atual ? `${atual} ${novo}` : novo))
+    } catch (err) {
+      setFeed((f) => [...f, { kind: 'erro', text: err instanceof Error ? err.message : 'Falha ao transcrever.' }])
+    } finally {
+      setTranscrevendo(false)
+    }
+  }
+
+  async function iniciarGravacao() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      chunksRef.current = []
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
+      }
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || 'audio/webm' })
+        stream.getTracks().forEach((t) => t.stop())
+        void transcrever(blob)
+      }
+      mr.start()
+      mediaRecorderRef.current = mr
+      setGravando(true)
+    } catch {
+      setFeed((f) => [...f, { kind: 'erro', text: 'Não consegui acessar o microfone. Verifique a permissão do navegador.' }])
+    }
+  }
+
+  function pararGravacao() {
+    mediaRecorderRef.current?.stop()
+    setGravando(false)
   }
 
   async function gerarPeca(p: Decisao['parametros']) {
@@ -239,6 +284,19 @@ export default function Chat() {
               {subindoFoto ? '…' : '📎'}
               <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={anexarFotos} disabled={subindoFoto} />
             </label>
+            <button
+              type="button"
+              onClick={() => (gravando ? pararGravacao() : void iniciarGravacao())}
+              disabled={transcrevendo}
+              title={gravando ? 'Parar e transcrever' : 'Gravar áudio'}
+              className={`rounded-lg border px-3 py-2 text-sm transition disabled:opacity-40 ${
+                gravando
+                  ? 'animate-pulse border-red-600 bg-red-600 text-white'
+                  : 'border-neutral-700 text-neutral-300 hover:bg-neutral-800'
+              }`}
+            >
+              {transcrevendo ? '…' : gravando ? '■' : '🎤'}
+            </button>
             <textarea
               className="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2.5 text-sm outline-none focus:border-violet-500"
               placeholder="Ex.: carrossel da imersão de Caxias, foco em prova social, chamar no WhatsApp"
