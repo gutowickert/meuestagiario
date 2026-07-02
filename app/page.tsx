@@ -35,6 +35,8 @@ export default function Studio() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [result, setResult] = useState<GenerateResult | null>(null)
+  const [fotoCapa, setFotoCapa] = useState<string | null>(null)
+  const [subindoFoto, setSubindoFoto] = useState(false)
 
   // Carrega os produtos reais da marca (contexto), pra não anunciar "no vácuo".
   useEffect(() => {
@@ -47,6 +49,28 @@ export default function Studio() {
       })
       .catch(() => {})
   }, [])
+
+  async function subirFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setSubindoFoto(true)
+    setErro(null)
+    try {
+      const resp = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Falha ao subir a foto.')
+      setFotoCapa(data.url)
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Falha ao subir a foto.')
+    } finally {
+      setSubindoFoto(false)
+    }
+  }
 
   async function gerar() {
     setLoading(true)
@@ -63,6 +87,7 @@ export default function Studio() {
           briefing,
           tipo,
           formato,
+          foto_capa: fotoCapa ?? undefined,
         }),
       })
       const data = await resp.json()
@@ -153,6 +178,43 @@ export default function Studio() {
               onChange={(e) => setBriefing(e.target.value)}
             />
           </label>
+
+          {/* Foto da capa (real) — sem ela, a capa mostra o placeholder "FOTO REAL" */}
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="text-neutral-400">Foto da capa (opcional)</span>
+            <div className="flex items-center gap-3">
+              <label className="cursor-pointer rounded-lg border border-neutral-700 px-4 py-2 text-neutral-300 transition hover:bg-neutral-800">
+                {subindoFoto ? 'Enviando…' : fotoCapa ? 'Trocar foto' : 'Enviar foto'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={subirFoto}
+                  disabled={subindoFoto}
+                />
+              </label>
+              {fotoCapa ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={fotoCapa}
+                    alt="prévia da foto da capa"
+                    className="h-12 w-12 rounded-lg border border-neutral-700 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFotoCapa(null)}
+                    className="text-xs text-neutral-500 hover:text-neutral-300"
+                  >
+                    remover
+                  </button>
+                </>
+              ) : (
+                <span className="text-xs text-neutral-500">JPG, PNG ou WEBP · até 10MB</span>
+              )}
+            </div>
+          </div>
+
           <button
             onClick={gerar}
             disabled={loading || !briefing.trim()}
