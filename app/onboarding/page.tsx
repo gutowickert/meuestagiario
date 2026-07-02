@@ -23,8 +23,53 @@ export default function Onboarding() {
   const [aplicando, setAplicando] = useState(false)
   const [aplicado, setAplicado] = useState<string | null>(null)
 
+  const [prints, setPrints] = useState<string[]>([])
+  const [subindoPrint, setSubindoPrint] = useState(false)
+  const [extraindo, setExtraindo] = useState(false)
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
+
+  async function subirPrints(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (files.length === 0) return
+    setSubindoPrint(true)
+    setErro(null)
+    try {
+      for (const file of files) {
+        const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': file.type }, body: file })
+        const data = await resp.json()
+        if (!resp.ok) throw new Error(data.error || 'Falha ao subir o print.')
+        setPrints((a) => [...a, data.url as string])
+      }
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao subir o print.')
+    } finally {
+      setSubindoPrint(false)
+    }
+  }
+
+  async function extrairPrints() {
+    setExtraindo(true)
+    setErro(null)
+    setProposta(null)
+    setAplicado(null)
+    try {
+      const resp = await fetch('/api/importar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand_id: BRAND_ID, imagens: prints }),
+      })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Falha ao extrair.')
+      setProposta(data as PropostaOnboarding)
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao extrair.')
+    } finally {
+      setExtraindo(false)
+    }
+  }
 
   const atual = ROTEIRO[idx]
   const respondidas = ROTEIRO.filter((q) => respostas[q.id]?.trim()).length
@@ -183,6 +228,49 @@ export default function Onboarding() {
               Ver em Contexto
             </Link>
           </p>
+        ) : null}
+
+        {/* ---- Importar por print ---- */}
+        {!proposta ? (
+          <section className="mb-6 grid gap-3 rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
+            <div>
+              <h2 className="text-lg font-semibold text-violet-300">Importar por print do site</h2>
+              <p className="mt-1 text-sm text-neutral-400">
+                Suba prints do seu site (home, páginas de curso, ofertas). O sistema lê as imagens e monta o contexto
+                — marca e produtos — pra você revisar.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="cursor-pointer rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-300 transition hover:bg-neutral-800">
+                {subindoPrint ? 'Enviando…' : 'Adicionar prints'}
+                <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={subirPrints} disabled={subindoPrint} />
+              </label>
+              {prints.map((url, i) => (
+                <div key={url} className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`print ${i + 1}`} className="h-14 w-14 rounded-lg border border-neutral-700 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setPrints((a) => a.filter((u) => u !== url))}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-300 hover:bg-red-900 hover:text-white"
+                    aria-label="remover"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            {prints.length > 0 ? (
+              <button
+                onClick={() => void extrairPrints()}
+                disabled={extraindo || subindoPrint}
+                className="w-fit rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:opacity-50"
+              >
+                {extraindo ? 'Lendo os prints…' : `Extrair contexto de ${prints.length} print(s)`}
+              </button>
+            ) : null}
+            <p className="text-xs text-neutral-600">Ou responda a entrevista por áudio abaixo.</p>
+          </section>
         ) : null}
 
         {/* ---- Entrevista ---- */}

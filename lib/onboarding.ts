@@ -65,7 +65,7 @@ const OBJECOES_SCHEMA = {
   },
 }
 
-const PROPOSTA_SCHEMA: Record<string, unknown> = {
+export const PROPOSTA_SCHEMA: Record<string, unknown> = {
   type: 'object',
   additionalProperties: false,
   properties: {
