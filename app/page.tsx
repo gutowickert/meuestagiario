@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { CATALOGO, TEMPLATE_PADRAO_ID } from '@/lib/templates/catalogo'
 
 // Brand de teste (Carreira No Digital). Depois vira um seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
@@ -29,6 +30,7 @@ export default function Studio() {
   const [produto, setProduto] = useState('') // id do produto selecionado
   const [tipo, setTipo] = useState('carrossel')
   const [formato, setFormato] = useState('feed_quadrado')
+  const [template, setTemplate] = useState(TEMPLATE_PADRAO_ID)
   const [briefing, setBriefing] = useState(
     'Anunciar a próxima turma de Anúncios para Negócios Locais, foco em dono de comércio que quer mais clientes.',
   )
@@ -87,6 +89,7 @@ export default function Studio() {
           briefing,
           tipo,
           formato,
+          template,
           foto_capa: fotoCapa ?? undefined,
         }),
       })
@@ -167,6 +170,25 @@ export default function Studio() {
                 <option value="feed_quadrado">Feed quadrado (1:1)</option>
                 <option value="feed_retrato">Feed retrato (4:5)</option>
                 <option value="story">Story / Reel (9:16)</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="flex items-center justify-between text-neutral-400">
+                Estilo (template)
+                <Link href="/estilos" className="text-xs text-violet-300 hover:text-violet-200">
+                  ver estilos
+                </Link>
+              </span>
+              <select
+                className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 outline-none focus:border-violet-500"
+                value={template}
+                onChange={(e) => setTemplate(e.target.value)}
+              >
+                {CATALOGO.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.nome}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

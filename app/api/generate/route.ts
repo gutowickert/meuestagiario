@@ -7,8 +7,7 @@ import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
 import { renderSlidePng, logoDataUri } from '@/lib/render'
 import { subirImagem } from '@/lib/storage'
 import { tokensParaTemplate } from '@/lib/templates/tokens'
-import { SlideCapa } from '@/lib/templates/slide-capa'
-import { SlideConteudo } from '@/lib/templates/slide-conteudo'
+import { getTemplate } from '@/lib/templates/registry'
 
 // Rotas de geração podem demorar (raciocínio do modelo + render) — Fluid Compute.
 export const maxDuration = 300
@@ -20,7 +19,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, template } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -70,34 +69,25 @@ export async function POST(request: Request) {
     // 3. content_id (vira utm_content)
     const content_id = gerarContentId({ produto_id: produtoAtributo, cidade: input.cidade, tipo })
 
-    // 4-6. Renderiza cada slide, sobe no Storage
+    // 4-6. Renderiza cada slide com o template escolhido, sobe no Storage
     const fotoCapa = typeof foto_capa === 'string' ? foto_capa : undefined
+    const molde = getTemplate(typeof template === 'string' ? template : null)
     const logo = await logoDataUri()
     const slidesAssets: { ordem: number; papel: string; url: string }[] = []
 
     for (const slide of spec.slides) {
-      const ehCapa = slide.ordem === 1 || slide.papel === 'gancho'
-      const element = ehCapa
-        ? SlideCapa({
-            largura: dim.largura,
-            altura: dim.altura,
-            tokens,
-            titulo: slide.titulo,
-            cidade: input.cidade ?? undefined,
-            subtitulo: slide.corpo,
-            fotoUrl: fotoCapa,
-            logoUrl: logo,
-          })
-        : SlideConteudo({
-            largura: dim.largura,
-            altura: dim.altura,
-            tokens,
-            ordem: slide.ordem,
-            papel: slide.papel,
-            titulo: slide.titulo,
-            corpo: slide.corpo,
-            logoUrl: logo,
-          })
+      const element = molde.render({
+        largura: dim.largura,
+        altura: dim.altura,
+        tokens,
+        ordem: slide.ordem,
+        papel: slide.papel,
+        titulo: slide.titulo,
+        corpo: slide.corpo,
+        cidade: input.cidade ?? undefined,
+        fotoUrl: fotoCapa,
+        logoUrl: logo,
+      })
 
       const png = await renderSlidePng(element, dim.largura, dim.altura)
       const path = `${content_id}/slide-${String(slide.ordem).padStart(2, '0')}.png`

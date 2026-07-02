@@ -1,13 +1,13 @@
-// GET /api/slide-preview?formato=feed_quadrado
-// Renderiza o template slide-capa com os tokens da Carreira No Digital,
-// pra visualizar o visual da marca. (Passo intermediário: depois o /api/generate
-// usa este template com a copy e as fotos reais.)
+// GET /api/slide-preview?template=editorial&papel=capa&formato=feed_quadrado
+// Renderiza um slide de EXEMPLO com o template pedido e os tokens da marca,
+// pra galeria de estilos (/estilos). Conteúdo fake só pra visualizar o layout.
 import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { getFormato, FORMATO_PADRAO, isFormatoValido } from '@/lib/formats'
 import { logoDataUri } from '@/lib/render'
-import { SlideCapa, type CapaTokens } from '@/lib/templates/slide-capa'
+import { getTemplate } from '@/lib/templates/registry'
+import type { CapaTokens } from '@/lib/templates/slide-capa'
 
 // Tokens da Carreira No Digital (espelham o seed 002; futuramente vêm de getBrand()).
 const TOKENS: CapaTokens = {
@@ -23,32 +23,40 @@ const TOKENS: CapaTokens = {
   fontes: { titulo: 'Anton', corpo: 'Poppins' },
 }
 
+// Amostras de conteúdo por papel, só pra ver o layout.
+const AMOSTRA = {
+  capa: { ordem: 1, papel: 'gancho', titulo: 'Impulsionar post não é anúncio', corpo: 'Existe um jeito certo — e é mais simples do que parece.' },
+  conteudo: { ordem: 2, papel: 'desenvolvimento', titulo: '3 dias, sua campanha no ar', corpo: 'Dia 1: o que funciona de verdade. Dia 2: você sobe o anúncio do seu negócio. Dia 3: revisão de métricas e mentoria.' },
+  prova: { ordem: 3, papel: 'prova', titulo: 'R$40 viraram R$65 mil', corpo: 'Aluna investiu R$40 no 2º dia e vendeu um carro de R$65.000. Aconteceu na prática.' },
+} as const
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const fmtParam = searchParams.get('formato') ?? FORMATO_PADRAO
     const formato = getFormato(isFormatoValido(fmtParam) ? fmtParam : FORMATO_PADRAO)
+    const molde = getTemplate(searchParams.get('template'))
+    const papelParam = (searchParams.get('papel') ?? 'capa') as keyof typeof AMOSTRA
+    const amostra = AMOSTRA[papelParam] ?? AMOSTRA.capa
 
-    const [anton, poppinsBold, logo] = await Promise.all([
+    const [anton, poppinsBold, poppinsSemi, logo] = await Promise.all([
       readFile(join(process.cwd(), 'assets/fonts/Anton-Regular.ttf')),
       readFile(join(process.cwd(), 'assets/fonts/Poppins-Bold.ttf')),
+      readFile(join(process.cwd(), 'assets/fonts/Poppins-SemiBold.ttf')),
       logoDataUri(),
     ])
 
     return new ImageResponse(
-      SlideCapa({
+      molde.render({
         largura: formato.largura,
         altura: formato.altura,
         tokens: TOKENS,
-        titulo: 'Formação Completa em Marketing Digital',
-        cidade: 'Porto Alegre – RS',
-        subtitulo: 'Seu negócio no digital, pronto e rodando',
+        ordem: amostra.ordem,
+        papel: amostra.papel,
+        titulo: amostra.titulo,
+        corpo: amostra.corpo,
+        cidade: 'Caxias do Sul',
         logoUrl: logo,
-        chips: [
-          { texto: '4 módulos', destaque: true },
-          { texto: '4 semanas' },
-          { texto: 'presencial' },
-        ],
       }),
       {
         width: formato.largura,
@@ -56,6 +64,7 @@ export async function GET(request: Request) {
         fonts: [
           { name: 'Anton', data: anton, weight: 400, style: 'normal' },
           { name: 'Poppins', data: poppinsBold, weight: 700, style: 'normal' },
+          { name: 'Poppins', data: poppinsSemi, weight: 600, style: 'normal' },
         ],
       },
     )
