@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, template, logo, logo_pos, cta_objetivo } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -72,7 +72,24 @@ export async function POST(request: Request) {
     const content_id = gerarContentId({ produto_id: produtoAtributo, cidade: input.cidade, tipo })
 
     // 4-6. Renderiza cada slide com o template escolhido, sobe no Storage
-    const fotoCapa = typeof foto_capa === 'string' ? foto_capa : undefined
+    // Fotos: aceita lista (nova) ou foto_capa (compat). 1ª = capa; demais espalhadas.
+    const listaFotos = Array.isArray(fotos)
+      ? fotos.filter((f): f is string => typeof f === 'string' && f.length > 0)
+      : typeof foto_capa === 'string'
+        ? [foto_capa]
+        : []
+    const capaOrdem = spec.slides.find((s) => s.ordem === 1 || s.papel === 'gancho')?.ordem
+    const fotoPorOrdem = new Map<number, string>()
+    if (listaFotos[0] != null && capaOrdem != null) fotoPorOrdem.set(capaOrdem, listaFotos[0])
+    const ordensInternas = spec.slides.map((s) => s.ordem).filter((o) => o !== capaOrdem)
+    const extras = listaFotos.slice(1)
+    if (extras.length > 0 && ordensInternas.length > 0) {
+      const passo = ordensInternas.length / extras.length
+      extras.forEach((url, k) => {
+        const idx = Math.min(ordensInternas.length - 1, Math.round(k * passo))
+        fotoPorOrdem.set(ordensInternas[idx], url)
+      })
+    }
     const molde = getTemplate(typeof template === 'string' ? template : null)
     const logoPos = typeof logo_pos === 'string' ? (logo_pos as LogoPos) : undefined
     const mostrarLogo = logo !== false && logoPos !== 'oculto' // default: mostra
@@ -91,7 +108,7 @@ export async function POST(request: Request) {
         topicos: slide.topicos,
         destaque: slide.destaque,
         cidade: input.cidade ?? undefined,
-        fotoUrl: fotoCapa,
+        fotoUrl: fotoPorOrdem.get(slide.ordem),
         logoUrl: logoImg,
         logoPos,
       })

@@ -40,7 +40,7 @@ export default function Studio() {
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [result, setResult] = useState<GenerateResult | null>(null)
-  const [fotoCapa, setFotoCapa] = useState<string | null>(null)
+  const [fotos, setFotos] = useState<string[]>([])
   const [subindoFoto, setSubindoFoto] = useState(false)
 
   // Carrega os produtos reais da marca (contexto), pra não anunciar "no vácuo".
@@ -56,20 +56,22 @@ export default function Studio() {
   }, [])
 
   async function subirFoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const files = Array.from(e.target.files ?? [])
     e.target.value = ''
-    if (!file) return
+    if (files.length === 0) return
     setSubindoFoto(true)
     setErro(null)
     try {
-      const resp = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      })
-      const data = await resp.json()
-      if (!resp.ok) throw new Error(data.error || 'Falha ao subir a foto.')
-      setFotoCapa(data.url)
+      for (const file of files) {
+        const resp = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        })
+        const data = await resp.json()
+        if (!resp.ok) throw new Error(data.error || 'Falha ao subir a foto.')
+        setFotos((atual) => [...atual, data.url as string])
+      }
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Falha ao subir a foto.')
     } finally {
@@ -96,7 +98,7 @@ export default function Studio() {
           logo: usarLogo,
           logo_pos: usarLogo ? logoPos : 'oculto',
           cta_objetivo: ctaObjetivo,
-          foto_capa: fotoCapa ?? undefined,
+          fotos,
         }),
       })
       const data = await resp.json()
@@ -221,39 +223,49 @@ export default function Studio() {
             />
           </label>
 
-          {/* Foto da capa (real) — sem ela, a capa mostra o placeholder "FOTO REAL" */}
-          <div className="flex flex-col gap-1 text-sm">
-            <span className="text-neutral-400">Foto da capa (opcional)</span>
-            <div className="flex items-center gap-3">
+          {/* Fotos reais — a 1ª é a capa; as demais são distribuídas nos slides */}
+          <div className="flex flex-col gap-2 text-sm">
+            <span className="text-neutral-400">
+              Fotos (opcional) <span className="text-neutral-600">— a 1ª é a capa; as outras entram em slides</span>
+            </span>
+            <div className="flex flex-wrap items-center gap-3">
               <label className="cursor-pointer rounded-lg border border-neutral-700 px-4 py-2 text-neutral-300 transition hover:bg-neutral-800">
-                {subindoFoto ? 'Enviando…' : fotoCapa ? 'Trocar foto' : 'Enviar foto'}
+                {subindoFoto ? 'Enviando…' : 'Adicionar fotos'}
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  multiple
                   className="hidden"
                   onChange={subirFoto}
                   disabled={subindoFoto}
                 />
               </label>
-              {fotoCapa ? (
-                <>
+              {fotos.length === 0 ? (
+                <span className="text-xs text-neutral-500">JPG, PNG ou WEBP · até 10MB cada</span>
+              ) : null}
+              {fotos.map((url, i) => (
+                <div key={url} className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={fotoCapa}
-                    alt="prévia da foto da capa"
-                    className="h-12 w-12 rounded-lg border border-neutral-700 object-cover"
+                    src={url}
+                    alt={`foto ${i + 1}`}
+                    className="h-14 w-14 rounded-lg border border-neutral-700 object-cover"
                   />
+                  {i === 0 ? (
+                    <span className="absolute left-0 top-0 rounded-br-lg rounded-tl-lg bg-violet-600 px-1 text-[10px] font-semibold text-white">
+                      capa
+                    </span>
+                  ) : null}
                   <button
                     type="button"
-                    onClick={() => setFotoCapa(null)}
-                    className="text-xs text-neutral-500 hover:text-neutral-300"
+                    onClick={() => setFotos((atual) => atual.filter((u) => u !== url))}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-800 text-xs text-neutral-300 hover:bg-red-900 hover:text-white"
+                    aria-label="remover foto"
                   >
-                    remover
+                    ×
                   </button>
-                </>
-              ) : (
-                <span className="text-xs text-neutral-500">JPG, PNG ou WEBP · até 10MB</span>
-              )}
+                </div>
+              ))}
             </div>
           </div>
 

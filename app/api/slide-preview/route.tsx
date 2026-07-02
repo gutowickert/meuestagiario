@@ -43,6 +43,8 @@ export async function GET(request: Request) {
     const amostra = AMOSTRA[papelParam] ?? AMOSTRA.capa
     const logoParam = searchParams.get('logo_pos')
     const logoPos = (logoParam as LogoPos) || undefined
+    // comfoto=1 usa o logo como "foto" só pra exercitar o layout de slide com foto.
+    const comFoto = searchParams.get('comfoto') === '1'
 
     const [anton, poppinsBold, poppinsSemi, logo] = await Promise.all([
       readFile(join(process.cwd(), 'assets/fonts/Anton-Regular.ttf')),
@@ -63,6 +65,7 @@ export async function GET(request: Request) {
         topicos: [...amostra.topicos],
         destaque: amostra.destaque,
         cidade: 'Caxias do Sul',
+        fotoUrl: comFoto ? logo : undefined,
         logoUrl: logo,
         logoPos,
       }),
