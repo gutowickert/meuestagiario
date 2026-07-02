@@ -4,14 +4,13 @@
 // Só Flexbox + position absolute (suportado pelo Satori). Lê os tokens da marca.
 // =============================================================
 import type { ReactElement } from 'react'
+import { logoCanto } from './logo'
 import { ehCapa, type SlideInput, type Template } from './types'
 
 function capa(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, titulo, corpo, cidade, fotoUrl, logoUrl } = input
+  const { largura, altura, tokens, titulo, corpo, cidade, fotoUrl, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
-  const logoW = 280 * u
-  const logoH = logoW / 2.745
 
   return (
     <div style={{ position: 'relative', display: 'flex', width: largura, height: altura, backgroundColor: cores.primaria_escura }}>
@@ -31,10 +30,7 @@ function capa(input: SlideInput): ReactElement {
         }}
       />
       {/* Conteúdo */}
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between', padding: 64 * u }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          {logoUrl ? <img src={logoUrl} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} /> : null}
-        </div>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'flex-end', padding: 64 * u }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {cidade ? (
             <div style={{ display: 'flex', marginBottom: 20 * u }}>
@@ -68,30 +64,26 @@ function capa(input: SlideInput): ReactElement {
           ) : null}
         </div>
       </div>
+      {logoCanto(logoUrl, logoPos, largura)}
     </div>
   )
 }
 
 function interno(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl } = input
+  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehProva = papel === 'prova'
-  const logoW = 240 * u
-  const logoH = logoW / 2.745
 
   return (
-    <div style={{ display: 'flex', width: largura, height: altura, backgroundColor: cores.primaria_escura, padding: 72 * u }}>
+    <div style={{ position: 'relative', display: 'flex', width: largura, height: altura, backgroundColor: cores.primaria_escura, padding: 72 * u }}>
       {/* Barra menta vertical à esquerda */}
       <div style={{ display: 'flex', width: 14 * u, borderRadius: 999, backgroundColor: cores.destaque, marginRight: 44 * u }} />
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 120 * u, lineHeight: 0.9, color: cores.destaque }}>
-            {String(ordem).padStart(2, '0')}
-          </div>
-          {logoUrl ? <img src={logoUrl} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} /> : null}
+        <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 130 * u, lineHeight: 0.9, color: cores.destaque }}>
+          {String(ordem).padStart(2, '0')}
         </div>
-        <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 68 * u, lineHeight: 1.02, color: cores.texto_claro, textTransform: 'uppercase', marginTop: 24 * u }}>
+        <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 74 * u, lineHeight: 1.0, color: cores.texto_claro, textTransform: 'uppercase', marginTop: 20 * u }}>
           {titulo}
         </div>
         <div style={{ display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center' }}>
@@ -100,8 +92,8 @@ function interno(input: SlideInput): ReactElement {
               display: 'flex',
               fontFamily: fontes.corpo,
               fontWeight: ehProva ? 700 : 600,
-              fontSize: (ehProva ? 48 : 42) * u,
-              lineHeight: 1.32,
+              fontSize: (ehProva ? 50 : 44) * u,
+              lineHeight: 1.3,
               color: cores.texto_claro,
             }}
           >
@@ -109,6 +101,7 @@ function interno(input: SlideInput): ReactElement {
           </div>
         </div>
       </div>
+      {logoCanto(logoUrl, logoPos, largura, 0.9)}
     </div>
   )
 }

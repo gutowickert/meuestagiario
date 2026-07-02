@@ -8,6 +8,7 @@ import { renderSlidePng, logoDataUri } from '@/lib/render'
 import { subirImagem } from '@/lib/storage'
 import { tokensParaTemplate } from '@/lib/templates/tokens'
 import { getTemplate } from '@/lib/templates/registry'
+import type { LogoPos } from '@/lib/templates/types'
 
 // Rotas de geração podem demorar (raciocínio do modelo + render) — Fluid Compute.
 export const maxDuration = 300
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, template } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, template, logo, logo_pos } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -72,7 +73,9 @@ export async function POST(request: Request) {
     // 4-6. Renderiza cada slide com o template escolhido, sobe no Storage
     const fotoCapa = typeof foto_capa === 'string' ? foto_capa : undefined
     const molde = getTemplate(typeof template === 'string' ? template : null)
-    const logo = await logoDataUri()
+    const logoPos = typeof logo_pos === 'string' ? (logo_pos as LogoPos) : undefined
+    const mostrarLogo = logo !== false && logoPos !== 'oculto' // default: mostra
+    const logoImg = mostrarLogo ? await logoDataUri() : undefined
     const slidesAssets: { ordem: number; papel: string; url: string }[] = []
 
     for (const slide of spec.slides) {
@@ -86,7 +89,8 @@ export async function POST(request: Request) {
         corpo: slide.corpo,
         cidade: input.cidade ?? undefined,
         fotoUrl: fotoCapa,
-        logoUrl: logo,
+        logoUrl: logoImg,
+        logoPos,
       })
 
       const png = await renderSlidePng(element, dim.largura, dim.altura)

@@ -31,6 +31,8 @@ export default function Studio() {
   const [tipo, setTipo] = useState('carrossel')
   const [formato, setFormato] = useState('feed_quadrado')
   const [template, setTemplate] = useState(TEMPLATE_PADRAO_ID)
+  const [usarLogo, setUsarLogo] = useState(true)
+  const [logoPos, setLogoPos] = useState('sup_dir')
   const [briefing, setBriefing] = useState(
     'Anunciar a próxima turma de Anúncios para Negócios Locais, foco em dono de comércio que quer mais clientes.',
   )
@@ -90,6 +92,8 @@ export default function Studio() {
           tipo,
           formato,
           template,
+          logo: usarLogo,
+          logo_pos: usarLogo ? logoPos : 'oculto',
           foto_capa: fotoCapa ?? undefined,
         }),
       })
@@ -235,6 +239,33 @@ export default function Studio() {
                 <span className="text-xs text-neutral-500">JPG, PNG ou WEBP · até 10MB</span>
               )}
             </div>
+          </div>
+
+          {/* Logo: usar ou não + onde */}
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={usarLogo}
+                onChange={(e) => setUsarLogo(e.target.checked)}
+                className="h-4 w-4 accent-violet-600"
+              />
+              <span className="text-neutral-300">Mostrar logo</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <span className="text-neutral-400">Posição</span>
+              <select
+                className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 outline-none focus:border-violet-500 disabled:opacity-40"
+                value={logoPos}
+                onChange={(e) => setLogoPos(e.target.value)}
+                disabled={!usarLogo}
+              >
+                <option value="sup_dir">Superior direita</option>
+                <option value="sup_esq">Superior esquerda</option>
+                <option value="inf_dir">Inferior direita</option>
+                <option value="inf_esq">Inferior esquerda</option>
+              </select>
+            </label>
           </div>
 
           <button

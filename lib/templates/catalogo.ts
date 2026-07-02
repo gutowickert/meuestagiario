@@ -11,6 +11,11 @@ export interface TemplateInfo {
 
 export const CATALOGO: TemplateInfo[] = [
   {
+    id: 'manchete',
+    nome: 'Manchete',
+    descricao: 'Estilo agência: tipografia gigante, alto contraste, foto full na capa, prova em destaque e CTA que estoura.',
+  },
+  {
     id: 'editorial',
     nome: 'Editorial',
     descricao: 'Degradê da marca, títulos Anton, foto em card e número-fantasma nos passos.',
@@ -27,4 +32,4 @@ export const CATALOGO: TemplateInfo[] = [
   },
 ]
 
-export const TEMPLATE_PADRAO_ID = 'editorial'
+export const TEMPLATE_PADRAO_ID = 'manchete'

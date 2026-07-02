@@ -8,6 +8,7 @@ import { getFormato, FORMATO_PADRAO, isFormatoValido } from '@/lib/formats'
 import { logoDataUri } from '@/lib/render'
 import { getTemplate } from '@/lib/templates/registry'
 import type { CapaTokens } from '@/lib/templates/slide-capa'
+import type { LogoPos } from '@/lib/templates/types'
 
 // Tokens da Carreira No Digital (espelham o seed 002; futuramente vêm de getBrand()).
 const TOKENS: CapaTokens = {
@@ -38,6 +39,8 @@ export async function GET(request: Request) {
     const molde = getTemplate(searchParams.get('template'))
     const papelParam = (searchParams.get('papel') ?? 'capa') as keyof typeof AMOSTRA
     const amostra = AMOSTRA[papelParam] ?? AMOSTRA.capa
+    const logoParam = searchParams.get('logo_pos')
+    const logoPos = (logoParam as LogoPos) || undefined
 
     const [anton, poppinsBold, poppinsSemi, logo] = await Promise.all([
       readFile(join(process.cwd(), 'assets/fonts/Anton-Regular.ttf')),
@@ -57,6 +60,7 @@ export async function GET(request: Request) {
         corpo: amostra.corpo,
         cidade: 'Caxias do Sul',
         logoUrl: logo,
+        logoPos,
       }),
       {
         width: formato.largura,

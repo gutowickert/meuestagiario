@@ -5,6 +5,7 @@
 // =============================================================
 import type { ReactElement } from 'react'
 import { SlideCapa } from './slide-capa'
+import { logoCanto } from './logo'
 import { ehCapa, type SlideInput, type Template } from './types'
 
 const ROTULO: Record<string, string> = {
@@ -15,18 +16,17 @@ const ROTULO: Record<string, string> = {
 }
 
 function interno(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl } = input
+  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehProva = papel === 'prova'
   const ehCta = papel === 'cta'
   const rotulo = `${ROTULO[papel] ?? 'Slide'} ${ordem}`
-  const logoW = 240 * u
-  const logoH = logoW / 2.745
 
   return (
     <div
       style={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         width: largura,
@@ -36,8 +36,8 @@ function interno(input: SlideInput): ReactElement {
         fontFamily: fontes.corpo,
       }}
     >
-      {/* Topo: rótulo (menta) + logo */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Rótulo (menta) */}
+      <div style={{ display: 'flex' }}>
         <div
           style={{
             display: 'flex',
@@ -56,22 +56,19 @@ function interno(input: SlideInput): ReactElement {
         >
           {rotulo}
         </div>
-        {logoUrl ? (
-          <img src={logoUrl} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} />
-        ) : null}
       </div>
 
-      {/* Número-fantasma grande + título */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: 44 * u }}>
+      {/* Número-fantasma grande + título (tipografia maior, mais editorial) */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: 40 * u }}>
         <div
           style={{
             display: 'flex',
             fontFamily: fontes.titulo,
-            fontSize: 150 * u,
-            lineHeight: 0.9,
+            fontSize: 170 * u,
+            lineHeight: 0.82,
             color: cores.destaque,
             opacity: 0.28,
-            marginRight: 28 * u,
+            marginRight: 30 * u,
           }}
         >
           {String(ordem).padStart(2, '0')}
@@ -81,15 +78,15 @@ function interno(input: SlideInput): ReactElement {
             style={{
               display: 'flex',
               fontFamily: fontes.titulo,
-              fontSize: 66 * u,
-              lineHeight: 1.03,
+              fontSize: 82 * u,
+              lineHeight: 0.98,
               color: cores.texto_claro,
               textTransform: 'uppercase',
             }}
           >
             {titulo}
           </div>
-          <div style={{ width: 96 * u, height: 10 * u, borderRadius: 999, marginTop: 22 * u, backgroundColor: cores.destaque }} />
+          <div style={{ width: 110 * u, height: 12 * u, borderRadius: 999, marginTop: 24 * u, backgroundColor: cores.destaque }} />
         </div>
       </div>
 
@@ -101,13 +98,13 @@ function interno(input: SlideInput): ReactElement {
             flexDirection: 'column',
             flex: 1,
             justifyContent: 'center',
-            padding: 44 * u,
+            padding: 48 * u,
             borderRadius: 28 * u,
             backgroundColor: ehCta ? cores.destaque : 'rgba(0,0,0,0.22)',
           }}
         >
           {ehProva ? (
-            <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 90 * u, lineHeight: 0.7, color: cores.destaque, marginBottom: 10 * u }}>
+            <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 100 * u, lineHeight: 0.7, color: cores.destaque, marginBottom: 12 * u }}>
               “
             </div>
           ) : null}
@@ -116,8 +113,8 @@ function interno(input: SlideInput): ReactElement {
               display: 'flex',
               fontFamily: fontes.corpo,
               fontWeight: ehProva ? 700 : 600,
-              fontSize: (ehProva ? 46 : 40) * u,
-              lineHeight: 1.34,
+              fontSize: (ehProva ? 50 : 44) * u,
+              lineHeight: 1.32,
               color: ehCta ? cores.texto_escuro : cores.texto_claro,
             }}
           >
@@ -125,6 +122,8 @@ function interno(input: SlideInput): ReactElement {
           </div>
         </div>
       </div>
+
+      {logoCanto(logoUrl, logoPos, largura, 0.9)}
     </div>
   )
 }
@@ -143,7 +142,7 @@ export const editorial: Template = {
         cidade: input.cidade,
         subtitulo: input.corpo,
         fotoUrl: input.fotoUrl,
-        logoUrl: input.logoUrl,
+        logoUrl: input.logoPos === 'oculto' ? undefined : input.logoUrl,
       })
     }
     return interno(input)

@@ -31,9 +31,10 @@ function moldura(largura: number, altura: number, cor: string, children: ReactEl
 }
 
 function capa(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, titulo, corpo, cidade, fotoUrl, logoUrl } = input
+  const { largura, altura, tokens, titulo, corpo, cidade, fotoUrl, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
+  const logo = logoPos === 'oculto' ? undefined : logoUrl
   const logoW = 260 * u
   const logoH = logoW / 2.745
 
@@ -42,9 +43,9 @@ function capa(input: SlideInput): ReactElement {
     altura,
     cores.primaria,
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      {logoUrl ? (
+      {logo ? (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 * u }}>
-          <img src={logoUrl} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} />
+          <img src={logo} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} />
         </div>
       ) : null}
 
@@ -137,10 +138,11 @@ function capa(input: SlideInput): ReactElement {
 }
 
 function interno(input: SlideInput): ReactElement {
-  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl } = input
+  const { largura, altura, tokens, ordem, papel, titulo, corpo, logoUrl, logoPos } = input
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehCta = papel === 'cta'
+  const logo = logoPos === 'oculto' ? undefined : logoUrl
   const rotulo = `${ROTULO[papel] ?? 'Slide'} ${ordem}`
   const logoW = 240 * u
   const logoH = logoW / 2.745
@@ -169,8 +171,8 @@ function interno(input: SlideInput): ReactElement {
         >
           {rotulo}
         </div>
-        {logoUrl ? (
-          <img src={logoUrl} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} />
+        {logo ? (
+          <img src={logo} width={logoW} height={logoH} style={{ width: logoW, height: logoH, objectFit: 'contain' }} />
         ) : null}
       </div>
 

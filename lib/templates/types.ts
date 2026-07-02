@@ -12,6 +12,11 @@ export type { CapaTokens }
 /** Papel do slide dentro do carrossel. */
 export type PapelSlide = 'gancho' | 'desenvolvimento' | 'prova' | 'cta'
 
+/** Onde posicionar o logo (ou ocultar). Escolha do usuário por peça. */
+export type LogoPos = 'sup_esq' | 'sup_dir' | 'inf_esq' | 'inf_dir' | 'oculto'
+
+export const LOGO_POS_PADRAO: LogoPos = 'sup_dir'
+
 /** Slots que qualquer template recebe pra um slide. Nem todo molde usa todos. */
 export interface SlideInput {
   largura: number
@@ -24,6 +29,7 @@ export interface SlideInput {
   cidade?: string
   fotoUrl?: string
   logoUrl?: string
+  logoPos?: LogoPos
 }
 
 /** Um molde de layout. `id` casa com o catálogo client-safe. */
