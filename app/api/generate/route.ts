@@ -1,6 +1,6 @@
 // POST /api/generate — o fluxo completo da Fatia 1.
 // briefing -> getBrand -> Claude (spec) -> render dos slides -> Storage -> content_pieces.
-import { getBrand, resolverProduto, inserirContentPiece } from '@/lib/data'
+import { getBrand, resolverProduto, inserirContentPiece, listarAprovados } from '@/lib/data'
 import { gerarSpec, type GerarInput } from '@/lib/generate'
 import { gerarContentId } from '@/lib/content-id'
 import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
@@ -55,6 +55,10 @@ export async function POST(request: Request) {
     // Na atribuição/utm usamos o código do produto (legível no relatório do Meta).
     const produtoAtributo = produto?.codigo ?? produtoRef
 
+    // 1c. Exemplos aprovados (memória viva) — few-shot das próximas gerações.
+    const aprovados = await listarAprovados(brand_id).catch(() => [])
+    const exemplosAprovados = aprovados.map((e) => ({ gancho: e.gancho, legenda: e.legenda }))
+
     // 2. Spec com o Claude (structured output)
     const input: GerarInput = {
       produto_id: produtoAtributo,
@@ -65,6 +69,7 @@ export async function POST(request: Request) {
       tipo,
       formato,
       ctaObjetivo: typeof cta_objetivo === 'string' ? cta_objetivo : null,
+      exemplosAprovados,
     }
     const spec = await gerarSpec(brand, input)
 
@@ -126,7 +131,7 @@ export async function POST(request: Request) {
     }
 
     // 7. Grava a peça
-    await inserirContentPiece({
+    const pieceId = await inserirContentPiece({
       content_id,
       brand_id,
       produto_id: input.produto_id,
@@ -138,8 +143,8 @@ export async function POST(request: Request) {
       assets,
     })
 
-    // 8. Retorna as URLs + content_id (pra virar utm_content no Meta)
-    return Response.json({ content_id, brand_id, tipo, formato, atributos: spec.atributos, assets, spec })
+    // 8. Retorna as URLs + content_id (pra virar utm_content no Meta) + id (pra feedback)
+    return Response.json({ id: pieceId, content_id, brand_id, tipo, formato, atributos: spec.atributos, assets, spec })
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido.'
     console.error('[/api/generate] falha:', msg)

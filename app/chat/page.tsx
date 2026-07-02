@@ -12,7 +12,9 @@ interface SlideAsset {
   url: string
 }
 interface GenerateResult {
+  id: string
   content_id: string
+  tipo: string
   atributos: Record<string, string>
   assets: { slides: SlideAsset[]; legenda: string; hashtags: string[] }
 }
@@ -300,6 +302,28 @@ function PecaCard({ result, produtoId, ctaObjetivo }: { result: GenerateResult; 
   const [opcoes, setOpcoes] = useState<string[] | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [feito, setFeito] = useState<'aprovado' | 'rejeitado' | null>(null)
+  const [enviandoFb, setEnviandoFb] = useState(false)
+
+  async function feedback(acao: 'aprovar' | 'rejeitar') {
+    const motivo = acao === 'rejeitar' ? window.prompt('Por que não ficou bom? (opcional)') ?? undefined : undefined
+    setEnviandoFb(true)
+    setErro(null)
+    try {
+      const resp = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ piece_id: result.id, acao, brand_id: BRAND_ID, tipo: result.tipo, atributos: result.atributos, motivo }),
+      })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || 'Falha ao enviar feedback.')
+      setFeito(acao === 'aprovar' ? 'aprovado' : 'rejeitado')
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao enviar feedback.')
+    } finally {
+      setEnviandoFb(false)
+    }
+  }
 
   async function buscarOpcoes() {
     setCarregando(true)
@@ -386,6 +410,32 @@ function PecaCard({ result, produtoId, ctaObjetivo }: { result: GenerateResult; 
             </button>
           </div>
         ) : null}
+      </div>
+
+      {/* Portão de aprovação — vira memória viva */}
+      <div className="mt-3 flex items-center gap-3 text-sm">
+        {feito ? (
+          <span className={feito === 'aprovado' ? 'text-emerald-400' : 'text-neutral-500'}>
+            {feito === 'aprovado' ? '✓ marcada como boa (vira exemplo pras próximas)' : '✕ rejeitada'}
+          </span>
+        ) : (
+          <>
+            <button
+              onClick={() => void feedback('aprovar')}
+              disabled={enviandoFb}
+              className="rounded-lg border border-emerald-800 px-3 py-1.5 text-emerald-300 transition hover:bg-emerald-950 disabled:opacity-50"
+            >
+              👍 Marcar boa
+            </button>
+            <button
+              onClick={() => void feedback('rejeitar')}
+              disabled={enviandoFb}
+              className="rounded-lg border border-neutral-700 px-3 py-1.5 text-neutral-400 transition hover:bg-neutral-800 disabled:opacity-50"
+            >
+              👎 Rejeitar
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

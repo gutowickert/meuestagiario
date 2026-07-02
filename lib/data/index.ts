@@ -13,3 +13,10 @@ export {
   type Produto,
   type ProdutoUpsert,
 } from './produtos'
+export {
+  aprovarPeca,
+  rejeitarPeca,
+  listarAprovados,
+  type AprovarInput,
+  type ExemploAprovado,
+} from './feedback'

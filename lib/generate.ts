@@ -45,6 +45,7 @@ export interface GerarInput {
   tipo: TipoPeca
   formato: FormatoId
   ctaObjetivo?: string | null // pra onde o CTA chama (whatsapp/site/inscricao/perfil/direct)
+  exemplosAprovados?: { gancho: string; legenda: string }[] // few-shot da memória viva
 }
 
 // Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
@@ -160,6 +161,18 @@ function blocoProduto(produto: Produto | null | undefined): string | null {
   ].join('\n')
 }
 
+function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string | null {
+  // Camada de exemplos aprovados (§12): copy que o curador já aprovou -> few-shot.
+  if (!exemplos || exemplos.length === 0) return null
+  const itens = exemplos
+    .map((e, i) => `${i + 1}. Gancho: ${e.gancho}\n   Legenda: ${e.legenda}`)
+    .join('\n')
+  return [
+    'EXEMPLOS APROVADOS (peças que o dono da marca JÁ aprovou — siga este padrão de gancho e voz; inspire-se, não copie literalmente):',
+    itens,
+  ].join('\n')
+}
+
 function instrucaoSistema(): string {
   return [
     'Você é o estrategista de conteúdo do MeuEstagiario. Gera peças de marketing para negócios locais que aprendem com o que vende.',
@@ -228,6 +241,9 @@ export async function gerarSpec(brand: Brand, input: GerarInput): Promise<Spec> 
   const produtoBloco = blocoProduto(input.produto)
   // Contexto do produto: estável por produto -> segundo breakpoint de cache.
   if (produtoBloco) system.push({ type: 'text', text: produtoBloco, cache_control: { type: 'ephemeral' } })
+  // Exemplos aprovados: mudam a cada aprovação -> sem cache.
+  const exemplosBloco = blocoExemplos(input.exemplosAprovados)
+  if (exemplosBloco) system.push({ type: 'text', text: exemplosBloco })
 
   const message = await anthropic.messages.create({
     model: MODEL_ESTRATEGIA,
