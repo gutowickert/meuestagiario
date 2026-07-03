@@ -18,6 +18,7 @@ export interface Slide {
   corpo: string
   topicos: string[] // se for lista/enumeração, cada item aqui; senão [] e usa corpo
   destaque: string // frase/estatística curta a realçar visualmente (vazio se não houver)
+  foto_idx: number // índice da foto anexada a usar neste slide (-1 = sem foto)
   direcao_visual: string // instrução de imagem/layout pro template (não gera pixel)
 }
 
@@ -48,6 +49,7 @@ export interface GerarInput {
   ctaObjetivo?: string | null // pra onde o CTA chama (whatsapp/site/inscricao/perfil/direct)
   exemplosAprovados?: { gancho: string; legenda: string }[] // few-shot da memória viva
   tendencia?: string | null // brief de newsjacking (surfar o que está em alta)
+  fotos?: string[] // fotos reais anexadas (URLs) — o modelo VÊ e casa foto<->slide
 }
 
 // Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
@@ -91,12 +93,17 @@ const SPEC_SCHEMA: Record<string, unknown> = {
             description:
               'Frase OU estatística MUITO curta (2-5 palavras) pra realçar visualmente neste slide, ex.: "R$40 vira R$65 mil", "3 dias presenciais", "sai vendendo". Puxe do CORPO e NÃO repita o título. Só letras, números e pontuação comum (sem setas/emojis). Vazio ("") se o título já for a frase de impacto ou não houver nada forte a destacar.',
           },
+          foto_idx: {
+            type: 'integer',
+            description:
+              'Índice (0..N-1) da foto anexada que MELHOR combina com este slide, olhando o que a foto mostra e o papel do slide. -1 se o slide fica melhor só com texto ou não há fotos.',
+          },
           direcao_visual: {
             type: 'string',
             description: 'Direção de imagem/layout pro template (ex.: "foto da turma sorrindo, logo no canto"). Não descreve pixels finais.',
           },
         },
-        required: ['ordem', 'papel', 'titulo', 'corpo', 'topicos', 'destaque', 'direcao_visual'],
+        required: ['ordem', 'papel', 'titulo', 'corpo', 'topicos', 'destaque', 'foto_idx', 'direcao_visual'],
       },
     },
     atributos: {
@@ -241,6 +248,17 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
     'Quando o slide for uma lista (dias, passos, itens), use "topicos" (um item por entrada) em vez de jogar tudo no corpo — o layout formata como lista.',
   ].join('\n')
 
+  const n = input.fotos?.length ?? 0
+  const regraFotos =
+    n > 0
+      ? [
+          `FOTOS ANEXADAS: ${n} foto(s) reais seguem como blocos de imagem, na ordem (índice 0 a ${n - 1}). VOCÊ AS VÊ.`,
+          'Para CADA slide, escolha em "foto_idx" o índice da foto que melhor combina com a MENSAGEM e o PAPEL do slide (a capa/gancho normalmente pede a foto mais forte/representativa). Use -1 quando o slide fica melhor só com texto.',
+          'A copy e a "direcao_visual" devem CASAR com o que a foto escolhida REALMENTE mostra (pessoas, cenário, objeto). Não descreva algo que não está na foto.',
+          'Evite repetir a mesma foto em vários slides sem motivo. Se uma foto for ruim (escura, cortada, fora de contexto), não use (-1).',
+        ].join('\n')
+      : 'Não há fotos anexadas: preencha "foto_idx" com -1 em TODOS os slides.'
+
   return [
     `Gere uma peça do tipo "${tipo.nome}" (${nslides}) no formato ${formato.nome} (${formato.proporcao}, ${formato.largura}x${formato.altura}px).`,
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
@@ -253,10 +271,26 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
     input.briefing,
     '',
     ehAnuncioImagem ? regraAnuncio : regraCarrossel,
+    '',
+    regraFotos,
     `Preencha atributos.formato exatamente com "${formato.id}".`,
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+// Conteúdo do turno do usuário: o texto + as fotos como blocos de imagem (o
+// modelo VÊ as fotos pra casar foto<->slide e a copy com o que aparece).
+type BlocoUsuario =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'url'; url: string } }
+
+function conteudoUsuario(brand: Brand, input: GerarInput): BlocoUsuario[] {
+  const blocos: BlocoUsuario[] = [{ type: 'text', text: mensagemUsuario(brand, input) }]
+  for (const url of input.fotos ?? []) {
+    blocos.push({ type: 'image', source: { type: 'url', url } })
+  }
+  return blocos
 }
 
 // ---- Chamada principal ----
@@ -285,7 +319,7 @@ export async function gerarSpec(brand: Brand, input: GerarInput): Promise<Spec> 
     max_tokens: 8000,
     thinking: { type: 'adaptive' },
     system,
-    messages: [{ role: 'user', content: mensagemUsuario(brand, input) }],
+    messages: [{ role: 'user', content: conteudoUsuario(brand, input) }],
     output_config: { format: { type: 'json_schema', schema: SPEC_SCHEMA } },
   })
 

@@ -68,7 +68,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Spec com o Claude (structured output)
+    // Fotos: aceita lista (nova) ou foto_capa (compat). O modelo VÊ as fotos e
+    // decide qual vai em cada slide (foto_idx) — não é mais posição fixa.
+    const listaFotos = Array.isArray(fotos)
+      ? fotos.filter((f): f is string => typeof f === 'string' && f.length > 0)
+      : typeof foto_capa === 'string'
+        ? [foto_capa]
+        : []
+
+    // 2. Spec com o Claude (structured output + visão das fotos)
     const input: GerarInput = {
       produto_id: produtoAtributo,
       produto,
@@ -80,6 +88,7 @@ export async function POST(request: Request) {
       ctaObjetivo: typeof cta_objetivo === 'string' ? cta_objetivo : null,
       exemplosAprovados,
       tendencia,
+      fotos: listaFotos,
     }
     const spec = await gerarSpec(brand, input)
 
@@ -87,26 +96,8 @@ export async function POST(request: Request) {
     const content_id = gerarContentId({ produto_id: produtoAtributo, cidade: input.cidade, tipo })
 
     // 4-6. Renderiza cada slide com o template escolhido, sobe no Storage
-    // Fotos: aceita lista (nova) ou foto_capa (compat). 1ª = capa; demais espalhadas.
-    const listaFotos = Array.isArray(fotos)
-      ? fotos.filter((f): f is string => typeof f === 'string' && f.length > 0)
-      : typeof foto_capa === 'string'
-        ? [foto_capa]
-        : []
-    const capaOrdem = spec.slides.find((s) => s.ordem === 1 || s.papel === 'gancho')?.ordem
-    const fotoPorOrdem = new Map<number, string>()
-    if (listaFotos[0] != null && capaOrdem != null) fotoPorOrdem.set(capaOrdem, listaFotos[0])
-    const ordensInternas = spec.slides.map((s) => s.ordem).filter((o) => o !== capaOrdem)
-    const extras = listaFotos.slice(1)
-    if (extras.length > 0 && ordensInternas.length > 0) {
-      // Espalha as fotos extras pelos slides internos (inclusive os do fim/CTA),
-      // sem agrupar logo no começo.
-      extras.forEach((url, k) => {
-        const pos = Math.round(((k + 1) * ordensInternas.length) / (extras.length + 1))
-        const idx = Math.min(ordensInternas.length - 1, Math.max(0, pos - 1))
-        fotoPorOrdem.set(ordensInternas[idx], url)
-      })
-    }
+    const fotoDoSlide = (idx: number): string | undefined =>
+      idx >= 0 && idx < listaFotos.length ? listaFotos[idx] : undefined
     const molde = getTemplate(typeof template === 'string' ? template : null)
     const logoPos = typeof logo_pos === 'string' ? (logo_pos as LogoPos) : undefined
     const mostrarLogo = logo !== false && logoPos !== 'oculto' // default: mostra
@@ -125,7 +116,7 @@ export async function POST(request: Request) {
         topicos: slide.topicos,
         destaque: slide.destaque,
         cidade: input.cidade ?? undefined,
-        fotoUrl: fotoPorOrdem.get(slide.ordem),
+        fotoUrl: fotoDoSlide(slide.foto_idx),
         logoUrl: logoImg,
         logoPos,
       })
