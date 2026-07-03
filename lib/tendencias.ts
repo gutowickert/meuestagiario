@@ -7,23 +7,43 @@
 import { getAnthropic, MODEL_ESTRATEGIA } from './anthropic'
 import type { Brand, Produto } from './data'
 
+function hojeBR(): string {
+  // Data de hoje no fuso do Brasil (o modelo não sabe a data sozinho).
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date())
+}
+
 function sistema(brand: Brand, produto: Produto | null): string {
   return [
     `Você é um estrategista de conteúdo de "${brand.nome}" (nicho: ${brand.nicho ?? '—'}; público: ${brand.publico ?? '—'}).`,
     produto ? `Produto em foco: ${produto.nome} — ${produto.oferta ?? ''}.` : '',
     '',
-    'TAREFA: usar a busca na web pra achar 1 ASSUNTO QUENTE AGORA (notícia, tendência, evento, meme, data, algo muito comentado na internet — de preferência no Brasil/pt-BR) e conectar de forma inteligente ao negócio, como um gancho de conteúdo.',
-    'Busque com termos atuais; priorize o que está em alta AGORA. Não invente fatos — use o que a busca trouxe.',
+    `HOJE É: ${hojeBR()}. Estamos no BRASIL (Rio Grande do Sul, fuso America/Sao_Paulo).`,
+    'Use a busca na web pra achar 1 ASSUNTO QUENTE DE VERDADE NESTA DATA (notícia, tendência, evento, meme, personalidade, jogo, lançamento — algo muito comentado no Brasil AGORA, nos últimos dias/semana).',
     '',
-    'DEVOLVA UM BRIEF CURTO (sem enrolação), em pt-BR, com:',
-    '1) TENDÊNCIA: o que está acontecendo (1-2 frases, concreto).',
-    '2) GANCHO: como amarrar isso ao negócio/nicho de forma inteligente (a ponte).',
+    'REGRAS DURAS:',
+    '- Baseie-se SÓ no que a busca retornou e que seja recente/atual pra HOJE. Confira as datas dos resultados.',
+    '- NÃO invente. E NÃO chute um evento sazonal que NÃO está acontecendo nesta data (ex.: não fale de Black Friday em julho). Se está longe da data, não serve.',
+    '- Se a busca não trouxer nada quente confiável pra hoje, DIGA ISSO honestamente e sugira 1 gancho perene seguro — deixando claro que não é "trend do dia".',
+    '- Busque com termos em pt-BR e priorize fontes/resultados do Brasil.',
+    '',
+    'DEVOLVA UM BRIEF CURTO (pt-BR), com:',
+    '1) TENDÊNCIA: o que está acontecendo AGORA (1-2 frases, concreto, com a data/período).',
+    '2) GANCHO: como amarrar ao negócio/nicho de forma inteligente (a ponte).',
     '3) ÂNGULO: a ideia central do post que aproveita a onda pra chegar no objetivo da marca.',
-    'Seja específico e usável. Nada de lista de opções — escolha a melhor e entregue.',
+    'Escolha a melhor e entregue — nada de lista de opções.',
   ]
     .filter(Boolean)
     .join('\n')
 }
+
+// Localização da busca no Brasil/RS pra resultados pt-BR e locais.
+const LOCAL = { type: 'approximate' as const, country: 'BR', region: 'Rio Grande do Sul', timezone: 'America/Sao_Paulo' }
 
 /** Busca uma tendência atual e devolve o brief de newsjacking (texto). */
 export async function buscarTendencia(
@@ -43,7 +63,7 @@ export async function buscarTendencia(
     model: MODEL_ESTRATEGIA,
     max_tokens: 3000,
     thinking: { type: 'adaptive' },
-    tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }],
+    tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5, user_location: LOCAL }],
     system: [{ type: 'text', text: sistema(brand, produto) }],
     messages,
   })
@@ -56,7 +76,7 @@ export async function buscarTendencia(
       model: MODEL_ESTRATEGIA,
       max_tokens: 3000,
       thinking: { type: 'adaptive' },
-      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 4 }],
+      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5, user_location: LOCAL }],
       system: [{ type: 'text', text: sistema(brand, produto) }],
       messages,
     })
