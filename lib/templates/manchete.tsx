@@ -20,7 +20,8 @@ interface Esquema {
 
 function esquemaDoSlide(ordem: number, papel: string, c: SlideInput['tokens']['cores']): Esquema {
   if (papel === 'cta') {
-    return { bg: c.destaque, titulo: c.texto_escuro, corpo: c.texto_escuro, accent: c.primaria, divisor: c.texto_escuro, claro: true }
+    // CTA em roxo (destaque) com texto branco — o roxo é a cor da marca.
+    return { bg: c.destaque, titulo: c.texto_claro, corpo: c.texto_claro, accent: c.texto_claro, divisor: c.texto_claro, claro: false }
   }
   if (ordem % 2 === 1) {
     return { bg: c.creme, titulo: c.primaria, corpo: c.texto_escuro, accent: c.primaria, divisor: c.destaque, claro: true }
@@ -78,7 +79,7 @@ function capa(input: SlideInput): ReactElement {
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {cidade ? (
         <div style={{ display: 'flex', marginBottom: 22 * u }}>
-          <div style={{ display: 'flex', paddingTop: 12 * u, paddingBottom: 12 * u, paddingLeft: 32 * u, paddingRight: 32 * u, borderRadius: 999, backgroundColor: cores.destaque, fontFamily: fontes.titulo, fontSize: 40 * u, color: cores.texto_escuro, textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', paddingTop: 12 * u, paddingBottom: 12 * u, paddingLeft: 32 * u, paddingRight: 32 * u, borderRadius: 999, backgroundColor: cores.destaque, fontFamily: fontes.titulo, fontSize: 40 * u, color: cores.texto_claro, textTransform: 'uppercase' }}>
             {cidade}
           </div>
         </div>

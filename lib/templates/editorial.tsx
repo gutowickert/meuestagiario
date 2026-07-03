@@ -50,7 +50,7 @@ function interno(input: SlideInput): ReactElement {
             fontFamily: fontes.corpo,
             fontWeight: 700,
             fontSize: 28 * u,
-            color: cores.texto_escuro,
+            color: cores.texto_claro,
             textTransform: 'uppercase',
           }}
         >
@@ -115,7 +115,7 @@ function interno(input: SlideInput): ReactElement {
               fontWeight: ehProva ? 700 : 600,
               fontSize: (ehProva ? 50 : 44) * u,
               lineHeight: 1.32,
-              color: ehCta ? cores.texto_escuro : cores.texto_claro,
+              color: ehCta ? cores.texto_claro : cores.texto_claro,
             }}
           >
             {corpo}

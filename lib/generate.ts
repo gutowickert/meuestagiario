@@ -227,6 +227,7 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
 
   const regraCarrossel = [
     'Estruture os slides com papéis claros (gancho -> desenvolvimento/prova -> cta). O primeiro slide é o gancho.',
+    'Termine com EXATAMENTE UM slide de papel "cta" (o último). NÃO faça dois slides de CTA seguidos.',
     'Em cada slide, escolha um "destaque" curto (a frase ou número mais forte) pra ser realçado no layout — ou deixe vazio se o slide não tiver um ponto forte único.',
     'Quando o slide for uma lista (dias, passos, itens), use "topicos" (um item por entrada) em vez de jogar tudo no corpo — o layout formata como lista.',
   ].join('\n')

@@ -125,7 +125,7 @@ function capa(input: SlideInput): ReactElement {
               backgroundColor: cores.destaque,
               fontFamily: fontes.titulo,
               fontSize: 44 * u,
-              color: cores.texto_escuro,
+              color: cores.texto_claro,
               textTransform: 'uppercase',
             }}
           >
@@ -142,6 +142,10 @@ function interno(input: SlideInput): ReactElement {
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehCta = papel === 'cta'
+  // No card de CTA (fundo roxo), texto branco; nos demais (creme), texto roxo/escuro.
+  const corTitulo = ehCta ? cores.texto_claro : cores.primaria
+  const corCorpo = ehCta ? cores.texto_claro : cores.texto_escuro
+  const corDivisor = ehCta ? cores.texto_claro : cores.destaque
   const logo = logoPos === 'oculto' ? undefined : logoUrl
   const rotulo = `${ROTULO[papel] ?? 'Slide'} ${ordem}`
   const logoW = 240 * u
@@ -165,7 +169,7 @@ function interno(input: SlideInput): ReactElement {
             fontFamily: fontes.corpo,
             fontWeight: 700,
             fontSize: 28 * u,
-            color: cores.texto_escuro,
+            color: cores.texto_claro,
             textTransform: 'uppercase',
           }}
         >
@@ -188,7 +192,7 @@ function interno(input: SlideInput): ReactElement {
           backgroundColor: ehCta ? cores.destaque : cores.creme,
         }}
       >
-        <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 150 * u, lineHeight: 0.9, color: cores.primaria, opacity: 0.18 }}>
+        <div style={{ display: 'flex', fontFamily: fontes.titulo, fontSize: 150 * u, lineHeight: 0.9, color: corTitulo, opacity: 0.18 }}>
           {String(ordem).padStart(2, '0')}
         </div>
         <div
@@ -197,14 +201,14 @@ function interno(input: SlideInput): ReactElement {
             fontFamily: fontes.titulo,
             fontSize: 62 * u,
             lineHeight: 1.03,
-            color: cores.primaria,
+            color: corTitulo,
             textTransform: 'uppercase',
             marginTop: 8 * u,
           }}
         >
           {titulo}
         </div>
-        <div style={{ width: 96 * u, height: 10 * u, borderRadius: 999, marginTop: 22 * u, backgroundColor: cores.destaque }} />
+        <div style={{ width: 96 * u, height: 10 * u, borderRadius: 999, marginTop: 22 * u, backgroundColor: corDivisor }} />
         <div
           style={{
             display: 'flex',
@@ -213,7 +217,7 @@ function interno(input: SlideInput): ReactElement {
             fontWeight: 600,
             fontSize: 40 * u,
             lineHeight: 1.34,
-            color: cores.texto_escuro,
+            color: corCorpo,
           }}
         >
           {corpo}

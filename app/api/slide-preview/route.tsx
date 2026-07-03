@@ -15,8 +15,8 @@ const TOKENS: CapaTokens = {
   cores: {
     primaria: '#7A2BD4',
     primaria_escura: '#3D1178',
-    destaque: '#6FE3A6',
-    creme: '#EAF7EC',
+    destaque: '#A855F7', // acento roxo (a marca é roxa, não verde)
+    creme: '#F3EEFB',
     texto_claro: '#FFFFFF',
     texto_escuro: '#262626',
     barra: '#141414',

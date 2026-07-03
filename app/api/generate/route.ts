@@ -89,9 +89,11 @@ export async function POST(request: Request) {
     const ordensInternas = spec.slides.map((s) => s.ordem).filter((o) => o !== capaOrdem)
     const extras = listaFotos.slice(1)
     if (extras.length > 0 && ordensInternas.length > 0) {
-      const passo = ordensInternas.length / extras.length
+      // Espalha as fotos extras pelos slides internos (inclusive os do fim/CTA),
+      // sem agrupar logo no começo.
       extras.forEach((url, k) => {
-        const idx = Math.min(ordensInternas.length - 1, Math.round(k * passo))
+        const pos = Math.round(((k + 1) * ordensInternas.length) / (extras.length + 1))
+        const idx = Math.min(ordensInternas.length - 1, Math.max(0, pos - 1))
         fotoPorOrdem.set(ordensInternas[idx], url)
       })
     }

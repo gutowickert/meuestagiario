@@ -37,7 +37,7 @@ function capa(input: SlideInput): ReactElement {
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'flex-end', padding: 76 * u }}>
         {cidade ? (
           <div style={{ display: 'flex', marginBottom: 22 * u }}>
-            <div style={{ display: 'flex', paddingTop: 12 * u, paddingBottom: 12 * u, paddingLeft: 30 * u, paddingRight: 30 * u, backgroundColor: cores.destaque, fontFamily: fontes.titulo, fontSize: 40 * u, color: PRETO, textTransform: 'uppercase' }}>
+            <div style={{ display: 'flex', paddingTop: 12 * u, paddingBottom: 12 * u, paddingLeft: 30 * u, paddingRight: 30 * u, backgroundColor: cores.destaque, fontFamily: fontes.titulo, fontSize: 40 * u, color: cores.texto_claro, textTransform: 'uppercase' }}>
               {cidade}
             </div>
           </div>
@@ -62,9 +62,11 @@ function interno(input: SlideInput): ReactElement {
   const { cores, fontes } = tokens
   const u = largura / 1080
   const ehCta = papel === 'cta'
-  const bg = ehCta ? cores.destaque : PRETO
-  const corTexto = ehCta ? PRETO : cores.texto_claro
-  const accent = ehCta ? PRETO : cores.destaque
+  // Oscila entre PRETO (par) e CLARO (ímpar); CTA em roxo. Acento roxo, texto branco.
+  const claro = !ehCta && ordem % 2 === 1
+  const bg = ehCta ? cores.destaque : claro ? cores.creme : PRETO
+  const corTexto = ehCta ? cores.texto_claro : claro ? cores.texto_escuro : cores.texto_claro
+  const accent = ehCta ? cores.texto_claro : claro ? cores.primaria : cores.destaque
   const lista = (topicos ?? []).filter((t) => t && t.trim())
   const temDestaque = !!destaque && destaque.trim().length > 0
   const tall = altura / largura >= 1.4
@@ -107,7 +109,7 @@ function interno(input: SlideInput): ReactElement {
           {base}
         </div>
       )}
-      {logoCanto(ehCta ? undefined : logoUrl, logoPos, largura, 0.9)}
+      {logoCanto(claro ? undefined : logoUrl, logoPos, largura, 0.9)}
     </div>
   )
 }
