@@ -47,6 +47,7 @@ export interface GerarInput {
   formato: FormatoId
   ctaObjetivo?: string | null // pra onde o CTA chama (whatsapp/site/inscricao/perfil/direct)
   exemplosAprovados?: { gancho: string; legenda: string }[] // few-shot da memória viva
+  tendencia?: string | null // brief de newsjacking (surfar o que está em alta)
 }
 
 // Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
@@ -179,6 +180,14 @@ function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string | null
   ].join('\n')
 }
 
+function blocoTendencia(tendencia: string | null | undefined): string | null {
+  if (!tendencia || !tendencia.trim()) return null
+  return [
+    'TENDÊNCIA PRA SURFAR (newsjacking — puxe este assunto quente e conecte ao negócio de forma inteligente e natural, sem forçar):',
+    tendencia.trim(),
+  ].join('\n')
+}
+
 function instrucaoSistema(): string {
   return [
     'Você é um COPYWRITER SÊNIOR de resposta direta, especialista em negócios locais. Sua copy faz a pessoa parar o dedo e agir.',
@@ -267,6 +276,9 @@ export async function gerarSpec(brand: Brand, input: GerarInput): Promise<Spec> 
   // Exemplos aprovados: mudam a cada aprovação -> sem cache.
   const exemplosBloco = blocoExemplos(input.exemplosAprovados)
   if (exemplosBloco) system.push({ type: 'text', text: exemplosBloco })
+  // Tendência (newsjacking): muda a cada peça -> sem cache.
+  const tendenciaBloco = blocoTendencia(input.tendencia)
+  if (tendenciaBloco) system.push({ type: 'text', text: tendenciaBloco })
 
   const message = await anthropic.messages.create({
     model: MODEL_ESTRATEGIA,

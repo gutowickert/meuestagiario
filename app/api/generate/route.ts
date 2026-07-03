@@ -1,6 +1,7 @@
 // POST /api/generate — o fluxo completo da Fatia 1.
 // briefing -> getBrand -> Claude (spec) -> render dos slides -> Storage -> content_pieces.
 import { getBrand, resolverProduto, inserirContentPiece, listarAprovados } from '@/lib/data'
+import { buscarTendencia } from '@/lib/tendencias'
 import { gerarSpec, type GerarInput } from '@/lib/generate'
 import { gerarContentId } from '@/lib/content-id'
 import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo, newsjacking, tendencia_tema } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -59,6 +60,14 @@ export async function POST(request: Request) {
     const aprovados = await listarAprovados(brand_id).catch(() => [])
     const exemplosAprovados = aprovados.map((e) => ({ gancho: e.gancho, legenda: e.legenda }))
 
+    // 1d. Newsjacking (opcional): busca o que está em alta e vira brief de gancho.
+    let tendencia: string | null = null
+    if (newsjacking === true) {
+      tendencia = await buscarTendencia(brand, produto, typeof tendencia_tema === 'string' ? tendencia_tema : null).catch(
+        () => null,
+      )
+    }
+
     // 2. Spec com o Claude (structured output)
     const input: GerarInput = {
       produto_id: produtoAtributo,
@@ -70,6 +79,7 @@ export async function POST(request: Request) {
       formato,
       ctaObjetivo: typeof cta_objetivo === 'string' ? cta_objetivo : null,
       exemplosAprovados,
+      tendencia,
     }
     const spec = await gerarSpec(brand, input)
 
@@ -146,7 +156,7 @@ export async function POST(request: Request) {
     })
 
     // 8. Retorna as URLs + content_id (pra virar utm_content no Meta) + id (pra feedback)
-    return Response.json({ id: pieceId, content_id, brand_id, tipo, formato, atributos: spec.atributos, assets, spec })
+    return Response.json({ id: pieceId, content_id, brand_id, tipo, formato, atributos: spec.atributos, assets, spec, tendencia })
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Erro desconhecido.'
     console.error('[/api/generate] falha:', msg)

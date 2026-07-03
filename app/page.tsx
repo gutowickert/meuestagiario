@@ -24,6 +24,7 @@ interface GenerateResult {
   content_id: string
   atributos: Record<string, string>
   assets: { slides: SlideAsset[]; legenda: string; hashtags: string[] }
+  tendencia?: string | null
 }
 
 export default function Studio() {
@@ -36,6 +37,8 @@ export default function Studio() {
   const [usarLogo, setUsarLogo] = useState(true)
   const [logoPos, setLogoPos] = useState('sup_dir')
   const [ctaObjetivo, setCtaObjetivo] = useState('whatsapp')
+  const [newsjacking, setNewsjacking] = useState(false)
+  const [tendenciaTema, setTendenciaTema] = useState('')
   const [briefing, setBriefing] = useState(
     'Anunciar a próxima turma de Anúncios para Negócios Locais, foco em dono de comércio que quer mais clientes.',
   )
@@ -101,6 +104,8 @@ export default function Studio() {
           logo: usarLogo,
           logo_pos: usarLogo ? logoPos : 'oculto',
           cta_objetivo: ctaObjetivo,
+          newsjacking,
+          tendencia_tema: newsjacking && tendenciaTema.trim() ? tendenciaTema.trim() : undefined,
           fotos,
         }),
       })
@@ -304,6 +309,28 @@ export default function Studio() {
             </label>
           </div>
 
+          {/* Newsjacking: surfar o que está em alta na internet */}
+          <div className="flex flex-col gap-2 rounded-lg border border-neutral-800 bg-neutral-950/50 p-3 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={newsjacking}
+                onChange={(e) => setNewsjacking(e.target.checked)}
+                className="h-4 w-4 accent-violet-600"
+              />
+              <span className="text-neutral-300">Surfar uma tendência (newsjacking)</span>
+              <span className="text-xs text-neutral-600">— busca o que está em alta e conecta ao negócio</span>
+            </label>
+            {newsjacking ? (
+              <input
+                className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 outline-none focus:border-violet-500"
+                placeholder="Tema/assunto (opcional) — ex.: Copa 2026, Black Friday. Vazio = o agente acha."
+                value={tendenciaTema}
+                onChange={(e) => setTendenciaTema(e.target.value)}
+              />
+            ) : null}
+          </div>
+
           <button
             onClick={gerar}
             disabled={loading || !briefing.trim()}
@@ -329,6 +356,16 @@ export default function Studio() {
                 </span>
               ))}
             </div>
+
+            {/* Tendência usada (newsjacking) */}
+            {result.tendencia ? (
+              <details className="mb-4 rounded-2xl border border-violet-900 bg-neutral-900 p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-violet-300">
+                  Tendência surfada (newsjacking)
+                </summary>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-neutral-300">{result.tendencia}</p>
+              </details>
+            ) : null}
 
             {/* Galeria de slides */}
             <div className="mb-2 flex justify-end">
