@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
+import { resizeImage } from '@/lib/resize-image'
 
 // Marca de teste (Carreira No Digital). Depois vira seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
@@ -68,7 +69,8 @@ export default function Chat() {
     setSubindoFoto(true)
     try {
       for (const file of files) {
-        const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': file.type }, body: file })
+        const blob = await resizeImage(file, 1920)
+        const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': blob.type || 'image/jpeg' }, body: blob })
         const data = await resp.json()
         if (!resp.ok) throw new Error(data.error || 'Falha ao subir a foto.')
         setFotos((a) => [...a, data.url as string])

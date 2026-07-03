@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CATALOGO, TEMPLATE_PADRAO_ID } from '@/lib/templates/catalogo'
+import { resizeImage } from '@/lib/resize-image'
 
 // Brand de teste (Carreira No Digital). Depois vira um seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
@@ -63,10 +64,11 @@ export default function Studio() {
     setErro(null)
     try {
       for (const file of files) {
+        const blob = await resizeImage(file, 1920)
         const resp = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': file.type },
-          body: file,
+          headers: { 'Content-Type': blob.type || 'image/jpeg' },
+          body: blob,
         })
         const data = await resp.json()
         if (!resp.ok) throw new Error(data.error || 'Falha ao subir a foto.')
