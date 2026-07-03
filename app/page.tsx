@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CATALOGO, TEMPLATE_PADRAO_ID } from '@/lib/templates/catalogo'
 import { resizeImage } from '@/lib/resize-image'
+import { baixarImagem, baixarTodas } from '@/lib/download'
 
 // Brand de teste (Carreira No Digital). Depois vira um seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
@@ -330,6 +331,14 @@ export default function Studio() {
             </div>
 
             {/* Galeria de slides */}
+            <div className="mb-2 flex justify-end">
+              <button
+                onClick={() => void baixarTodas(result.assets.slides, result.content_id)}
+                className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-800"
+              >
+                ⤓ Baixar todas
+              </button>
+            </div>
             <div className="flex snap-x gap-4 overflow-x-auto pb-3">
               {result.assets.slides.map((s) => (
                 <figure key={s.ordem} className="shrink-0 snap-start">
@@ -339,8 +348,14 @@ export default function Studio() {
                     alt={`slide ${s.ordem} (${s.papel})`}
                     className="h-80 w-auto rounded-xl border border-neutral-800"
                   />
-                  <figcaption className="mt-1 text-center text-xs text-neutral-500">
-                    {s.ordem}. {s.papel}
+                  <figcaption className="mt-1 flex items-center justify-center gap-2 text-xs text-neutral-500">
+                    <span>{s.ordem}. {s.papel}</span>
+                    <button
+                      onClick={() => void baixarImagem(s.url, `${result.content_id}-${String(s.ordem).padStart(2, '0')}.png`)}
+                      className="text-violet-300 hover:text-violet-200"
+                    >
+                      baixar
+                    </button>
                   </figcaption>
                 </figure>
               ))}

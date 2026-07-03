@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { resizeImage } from '@/lib/resize-image'
+import { baixarImagem, baixarTodas } from '@/lib/download'
 
 // Marca de teste (Carreira No Digital). Depois vira seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
@@ -364,13 +365,27 @@ function PecaCard({ result, produtoId, ctaObjetivo }: { result: GenerateResult; 
           </span>
         ))}
       </div>
+      <div className="mb-2 flex justify-end">
+        <button
+          onClick={() => void baixarTodas(result.assets.slides, result.content_id)}
+          className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-800"
+        >
+          ⤓ Baixar todas
+        </button>
+      </div>
       <div className="flex snap-x gap-3 overflow-x-auto pb-2">
         {result.assets.slides.map((s) => (
           <figure key={s.ordem} className="shrink-0 snap-start">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={s.url} alt={`slide ${s.ordem}`} className="h-72 w-auto rounded-xl border border-neutral-800" />
-            <figcaption className="mt-1 text-center text-xs text-neutral-500">
-              {s.ordem}. {s.papel}
+            <figcaption className="mt-1 flex items-center justify-center gap-2 text-xs text-neutral-500">
+              <span>{s.ordem}. {s.papel}</span>
+              <button
+                onClick={() => void baixarImagem(s.url, `${result.content_id}-${String(s.ordem).padStart(2, '0')}.png`)}
+                className="text-violet-300 hover:text-violet-200"
+              >
+                baixar
+              </button>
             </figcaption>
           </figure>
         ))}
