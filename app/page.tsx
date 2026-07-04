@@ -199,6 +199,9 @@ export default function Studio() {
             <Link href="/turmas" className="text-violet-300 hover:text-violet-200">
               Turmas em lote
             </Link>
+            <Link href="/videos" className="text-violet-300 hover:text-violet-200">
+              Vídeos
+            </Link>
             <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">
               Aprovados
             </Link>

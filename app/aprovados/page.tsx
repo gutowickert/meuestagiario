@@ -3,12 +3,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { PecaCard, type PecaResult } from '@/app/_components/PecaCard'
+import { RoteiroCard, type RoteiroResult, type RoteiroBlocoAsset } from '@/app/_components/RoteiroCard'
 
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
 
 interface Aprovada extends PecaResult {
   produto_id: string | null
   criado_em: string
+  // peças de vídeo (tipo reel) trazem o roteiro nos assets, sem slides
+  assets: PecaResult['assets'] & { roteiro?: RoteiroBlocoAsset[]; duracao?: string }
+}
+
+function ehRoteiro(p: Aprovada): boolean {
+  return Array.isArray(p.assets.roteiro) && p.assets.roteiro.length > 0
 }
 
 export default function Aprovados() {
@@ -48,6 +55,9 @@ export default function Aprovados() {
             <Link href="/turmas" className="text-violet-300 hover:text-violet-200">
               Turmas em lote
             </Link>
+            <Link href="/videos" className="text-violet-300 hover:text-violet-200">
+              Vídeos
+            </Link>
             <Link href="/" className="text-violet-300 hover:text-violet-200">
               Studio →
             </Link>
@@ -64,15 +74,19 @@ export default function Aprovados() {
           </p>
         ) : (
           <div className="grid gap-6">
-            {pecas.map((p) => (
-              <PecaCard
-                key={p.id}
-                result={p}
-                brandId={BRAND_ID}
-                produtoId={p.produto_id ?? undefined}
-                estadoInicial="aprovado"
-              />
-            ))}
+            {pecas.map((p) =>
+              ehRoteiro(p) ? (
+                <RoteiroCard key={p.id} result={p as unknown as RoteiroResult} brandId={BRAND_ID} estadoInicial="aprovado" />
+              ) : (
+                <PecaCard
+                  key={p.id}
+                  result={p}
+                  brandId={BRAND_ID}
+                  produtoId={p.produto_id ?? undefined}
+                  estadoInicial="aprovado"
+                />
+              ),
+            )}
           </div>
         )}
       </div>

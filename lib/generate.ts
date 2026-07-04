@@ -70,7 +70,7 @@ export function isEtapaValida(e: unknown): e is EtapaFunil {
 }
 
 // Estratégia de copy por etapa — o coração do funil. Injetado no prompt de geração.
-function blocoEtapa(etapa: EtapaFunil): string {
+export function blocoEtapa(etapa: EtapaFunil): string {
   if (etapa === 'descoberta') {
     return [
       'ETAPA DO FUNIL: DESCOBERTA (topo — público FRIO, NÃO conhece a escola). É o PRIMEIRO IMPACTO.',
@@ -173,7 +173,7 @@ const SPEC_SCHEMA: Record<string, unknown> = {
 
 // ---- Composição do prompt (3 camadas) ----
 
-function blocoMarca(brand: Brand): string {
+export function blocoMarca(brand: Brand): string {
   // Camada 1 (marca) + Camada 2 primária (metodo). Estável por marca -> cacheável.
   return [
     'PERFIL DA MARCA (fonte de assertividade — respeite tom, provas e objeções):',
@@ -198,7 +198,7 @@ function blocoMarca(brand: Brand): string {
   ].join('\n')
 }
 
-function blocoProduto(produto: Produto | null | undefined): string | null {
+export function blocoProduto(produto: Produto | null | undefined): string | null {
   // Camada 2 específica: cada produto tem seu método/oferta/objeções próprios (VISAO §3).
   if (!produto) return null
   return [
@@ -219,7 +219,7 @@ function blocoProduto(produto: Produto | null | undefined): string | null {
   ].join('\n')
 }
 
-function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string | null {
+export function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string | null {
   // Camada de exemplos aprovados (§12): copy que o curador já aprovou -> few-shot.
   if (!exemplos || exemplos.length === 0) return null
   const itens = exemplos
