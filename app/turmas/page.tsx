@@ -14,6 +14,13 @@ const ANGULOS = [
   { angulo: 'Oferta e urgência', hint: 'Ângulo: OFERTA/URGÊNCIA — turma, poucas vagas, motivo real pra agir agora.' },
 ]
 
+// Etapas do funil — muda a estratégia da copy (descoberta = frio, primeiro impacto).
+const ETAPAS = [
+  { id: 'descoberta' as const, nome: 'Descoberta', hint: 'Público frio: fala com o público-alvo e mostra o tema (anúncios pra negócio local). Sem "vaga/urgência".' },
+  { id: 'aquecimento' as const, nome: 'Aquecimento', hint: 'Já teve contato: educa, prova, quebra objeção, mostra o método.' },
+  { id: 'remarketing' as const, nome: 'Remarketing', hint: 'Já visitou/engajou: urgência da turma, oferta e fechamento.' },
+]
+
 // Quantos /api/generate rodam ao mesmo tempo (cada um é pesado ~40s).
 const CONCORRENCIA = 3
 
@@ -68,6 +75,7 @@ export default function Turmas() {
   const [erro, setErro] = useState<string | null>(null)
 
   const [mostrarPreco, setMostrarPreco] = useState(false)
+  const [etapa, setEtapa] = useState<'descoberta' | 'aquecimento' | 'remarketing'>('descoberta')
   const [ctaObjetivo, setCtaObjetivo] = useState('Chamar no WhatsApp pra garantir a vaga')
 
   const [gerando, setGerando] = useState(false)
@@ -147,6 +155,7 @@ export default function Turmas() {
           logo_pos: 'sup_dir',
           cta_objetivo: a.ctaObjetivo || undefined,
           mostrar_preco: mostrarPreco,
+          etapa,
           newsjacking: false,
           fotos: a.fotos,
         }),
@@ -164,13 +173,15 @@ export default function Turmas() {
     setGerando(true)
     setErro(null)
     const inicial: Anuncio[] = selecionadas.flatMap((t) =>
-      ANGULOS.map((ang) => ({
+      ANGULOS.map((ang, k) => ({
         turmaCodigo: t.codigo,
         angulo: ang.angulo,
         briefing: `${t.briefing}\n\n${ang.hint}`,
         produtoId: t.produto_id ?? t.produto_codigo,
         ctaObjetivo,
-        fotos: t.fotos,
+        // Distribui uma foto distinta por ângulo (evita a mesma foto nas 3 opções).
+        // Com ≥3 fotos, cada ângulo pega a sua; com menos, rotaciona.
+        fotos: t.fotos.length > 0 ? [t.fotos[k % t.fotos.length]] : [],
         result: null,
         estado: 'gerando' as const,
       })),
@@ -242,6 +253,27 @@ export default function Turmas() {
                   Mostrar preço
                 </label>
               </div>
+            </div>
+
+            {/* Etapa do funil — descoberta (frio) → aquecimento → remarketing (fechar) */}
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-neutral-400">Etapa do funil</label>
+              <div className="flex flex-wrap gap-2">
+                {ETAPAS.map((e) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => setEtapa(e.id)}
+                    className={`rounded-lg border px-3 py-1.5 text-sm transition ${
+                      etapa === e.id ? 'border-violet-500 bg-violet-950 text-violet-200' : 'border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+                    }`}
+                    title={e.hint}
+                  >
+                    {e.nome}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-neutral-500">{ETAPAS.find((e) => e.id === etapa)?.hint}</p>
             </div>
 
             <div className="mb-3">

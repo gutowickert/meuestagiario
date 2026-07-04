@@ -51,6 +51,49 @@ export interface GerarInput {
   tendencia?: string | null // brief de newsjacking (surfar o que está em alta)
   fotos?: string[] // fotos reais anexadas (URLs) — o modelo VÊ e casa foto<->slide
   mostrarPreco?: boolean // se pode citar preço/valores na peça (padrão: NÃO)
+  etapa?: EtapaFunil | null // onde no funil essa peça entra — muda a estratégia da copy
+}
+
+// ---- Etapa do funil (estratégia de campanha) ----
+// A mesma turma pede peças diferentes conforme a temperatura do público:
+// descoberta (frio) -> aquecimento (esquentar) -> remarketing (fechar).
+export type EtapaFunil = 'descoberta' | 'aquecimento' | 'remarketing'
+
+export const ETAPAS_FUNIL: Record<EtapaFunil, { nome: string; resumo: string }> = {
+  descoberta: { nome: 'Descoberta', resumo: 'Público frio, primeiro impacto. Fala com o público-alvo e mostra o tema.' },
+  aquecimento: { nome: 'Aquecimento', resumo: 'Já teve contato. Educa, prova, quebra objeção, mostra o método.' },
+  remarketing: { nome: 'Remarketing', resumo: 'Já visitou/engajou. Urgência da turma, oferta e fechamento.' },
+}
+
+export function isEtapaValida(e: unknown): e is EtapaFunil {
+  return e === 'descoberta' || e === 'aquecimento' || e === 'remarketing'
+}
+
+// Estratégia de copy por etapa — o coração do funil. Injetado no prompt de geração.
+function blocoEtapa(etapa: EtapaFunil): string {
+  if (etapa === 'descoberta') {
+    return [
+      'ETAPA DO FUNIL: DESCOBERTA (topo — público FRIO, NÃO conhece a escola). É o PRIMEIRO IMPACTO.',
+      '- A HEADLINE precisa fazer DUAS coisas em 1 segundo: (1) falar direto com o público-alvo — dono de negócio local / quem quer trabalhar com marketing digital no interior e região metropolitana do RS — e (2) deixar claro o ASSUNTO: anúncios / tráfego pago para negócios locais. A pessoa tem que pensar "isso é pra mim" e entender o tema na hora.',
+      '- Promessa grande, concreta e crível (mais clientes e vendas para o negócio local; virar o profissional que faz isso). Fale a dor/desejo de quem ainda NÃO conhece a solução.',
+      '- NÃO pressuponha que conhece a marca, o método ou a turma. NADA de "última turma", "poucas vagas", "garanta já" — é cedo demais e soa desesperado. CTA leve: chamar no WhatsApp pra entender / saber mais.',
+      '- Prova e oferta entram só de leve, como reforço. O herói é o reconhecimento do público + o tema (anúncios pra negócio local).',
+    ].join('\n')
+  }
+  if (etapa === 'aquecimento') {
+    return [
+      'ETAPA DO FUNIL: AQUECIMENTO (meio — já teve contato, precisa ESQUENTAR).',
+      '- Objetivo: educar, provar e quebrar objeção antes de vender. Construir desejo e confiança.',
+      '- Mostre COMO funciona, o MÉTODO da escola, resultados reais de alunos, por que presencial, por que na cidade dele. Conteúdo de VALOR, não oferta dura.',
+      '- Ataque a objeção mais forte do público. CTA de consideração: ver como funciona, tirar dúvida no WhatsApp.',
+    ].join('\n')
+  }
+  return [
+    'ETAPA DO FUNIL: REMARKETING / FECHAMENTO (fundo — já visitou o site ou engajou, JÁ conhece a oferta).',
+    '- Objetivo: FECHAR. Falar com quem já considerou e não deu o passo.',
+    '- Urgência REAL e específica da turma: datas, cidade, vagas limitadas, começa em breve. Oferta clara. Quebre a ÚLTIMA objeção (tempo, dinheiro, medo de não dar conta).',
+    '- Pode retomar o contato ("você viu a turma de {cidade} e ainda dá tempo"). CTA DIRETO e forte: garantir a vaga agora no WhatsApp.',
+  ].join('\n')
 }
 
 // Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
@@ -262,6 +305,7 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
 
   return [
     `Gere uma peça do tipo "${tipo.nome}" (${nslides}) no formato ${formato.nome} (${formato.proporcao}, ${formato.largura}x${formato.altura}px).`,
+    input.etapa ? blocoEtapa(input.etapa) : '',
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
     input.produto ? `Produto alvo: ${input.produto.nome} (veja "PRODUTO EM FOCO" no contexto).` : '',
     input.ctaObjetivo

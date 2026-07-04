@@ -40,6 +40,7 @@ export default function Studio() {
     'Anunciar a próxima turma de Anúncios para Negócios Locais, foco em dono de comércio que quer mais clientes.',
   )
   const [mostrarPreco, setMostrarPreco] = useState(false)
+  const [etapa, setEtapa] = useState<'descoberta' | 'aquecimento' | 'remarketing'>('descoberta')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [result, setResult] = useState<PecaResult | null>(null)
@@ -107,6 +108,7 @@ export default function Studio() {
         logo_pos: usarLogo ? logoPos : 'oculto',
         cta_objetivo: ctaObjetivo,
         mostrar_preco: mostrarPreco,
+        etapa,
         newsjacking: usarNews,
         tendencia_tema: usarNews && tendenciaTema.trim() ? tendenciaTema.trim() : undefined,
         fotos,
@@ -394,6 +396,30 @@ export default function Studio() {
                 onChange={(e) => setTendenciaTema(e.target.value)}
               />
             ) : null}
+          </div>
+
+          {/* Etapa do funil — muda a estratégia da copy */}
+          <div>
+            <label className="mb-1 block text-sm text-neutral-300">Etapa do funil</label>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: 'descoberta', nome: 'Descoberta', hint: 'Público frio, primeiro impacto. Fala com o público-alvo e mostra o tema. Sem "vaga/urgência".' },
+                { id: 'aquecimento', nome: 'Aquecimento', hint: 'Já teve contato: educa, prova, quebra objeção, mostra o método.' },
+                { id: 'remarketing', nome: 'Remarketing', hint: 'Já visitou/engajou: urgência da turma, oferta e fechamento.' },
+              ] as const).map((e) => (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => setEtapa(e.id)}
+                  title={e.hint}
+                  className={`rounded-lg border px-3 py-1.5 text-sm transition ${
+                    etapa === e.id ? 'border-violet-500 bg-violet-950 text-violet-200' : 'border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+                  }`}
+                >
+                  {e.nome}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Preço: decidir ANTES de gerar (padrão: sem preço) */}

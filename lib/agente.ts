@@ -21,6 +21,7 @@ export interface DecisaoParametros {
   cta_objetivo: string
   briefing: string
   mostrar_preco: boolean
+  etapa: string
 }
 
 export interface Decisao {
@@ -32,6 +33,7 @@ export interface Decisao {
 const FORMATOS = ['feed_quadrado', 'feed_retrato', 'story']
 const TIPOS = ['carrossel', 'anuncio_imagem']
 const CTAS = ['whatsapp', 'direct', 'site', 'inscricao', 'perfil']
+const ETAPAS = ['descoberta', 'aquecimento', 'remarketing']
 
 const DECISAO_SCHEMA: Record<string, unknown> = {
   type: 'object',
@@ -55,8 +57,9 @@ const DECISAO_SCHEMA: Record<string, unknown> = {
         cta_objetivo: { type: 'string', description: `Um de: ${CTAS.join(', ')}.` },
         briefing: { type: 'string', description: 'O brief consolidado pro gerador: ângulo, foco e ideia, em pt-BR.' },
         mostrar_preco: { type: 'boolean', description: 'Mostrar preço/valores na peça? Padrão false; true SÓ se o usuário pedir explicitamente.' },
+        etapa: { type: 'string', description: `Etapa do funil: ${ETAPAS.join(', ')}. descoberta=frio/primeiro impacto, aquecimento=esquentar, remarketing=fechar.` },
       },
-      required: ['produto_id', 'cidade', 'template', 'formato', 'tipo', 'cta_objetivo', 'briefing', 'mostrar_preco'],
+      required: ['produto_id', 'cidade', 'template', 'formato', 'tipo', 'cta_objetivo', 'briefing', 'mostrar_preco', 'etapa'],
     },
   },
   required: ['acao', 'mensagem', 'parametros'],
@@ -86,6 +89,7 @@ function sistema(brand: Brand, produtos: Produto[], numFotos: number): string {
     '- Decida SOZINHO a parte de CRIAÇÃO (você acerta): estilo/template, formato (padrão feed_quadrado), tipo (padrão carrossel), ângulo e composição.',
     '- Mas o que depende da INTENÇÃO/FUNIL do usuário você NÃO adivinha — PERGUNTE se não foi dito, porque errar isso gera retrabalho:',
     '  • OBJETIVO DO CTA (pra onde a chamada leva: whatsapp, direct, site, inscricao ou perfil). Se o pedido não deixar claro, PERGUNTE. NUNCA assuma WhatsApp por padrão.',
+    '  • ETAPA DO FUNIL (descoberta = público frio/primeiro impacto; aquecimento = esquentar quem já viu; remarketing = fechar quem já engajou). Muda toda a copy. Se o pedido não deixar claro, PERGUNTE. Na dúvida entre gerar cedo, "descoberta" é o padrão mais seguro — mas confirme se der.',
     '  • Qual PRODUTO, se houver vários e o pedido não deixar claro.',
     '  • A CIDADE/turma, se for peça de turma específica e não foi dita.',
     '- Junte o que faltar numa pergunta só, objetiva (ex.: "É pra qual produto e o CTA leva pra onde — WhatsApp, site ou inscrição?"). Não pergunte o que já dá pra decidir sozinho (estilo, formato…).',

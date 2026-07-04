@@ -20,6 +20,7 @@ interface Decisao {
     cta_objetivo: string
     briefing: string
     mostrar_preco: boolean
+    etapa: string
   }
 }
 
@@ -129,6 +130,7 @@ export default function Chat() {
           template: p.template || undefined,
           cta_objetivo: p.cta_objetivo || undefined,
           mostrar_preco: p.mostrar_preco === true,
+          etapa: p.etapa || 'descoberta',
           logo: true,
           logo_pos: 'sup_dir',
           fotos,

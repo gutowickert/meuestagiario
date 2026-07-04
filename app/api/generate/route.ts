@@ -2,7 +2,8 @@
 // briefing -> getBrand -> Claude (spec) -> render dos slides -> Storage -> content_pieces.
 import { getBrand, resolverProduto, inserirContentPiece, listarAprovados } from '@/lib/data'
 import { buscarTendencia } from '@/lib/tendencias'
-import { gerarSpec, type GerarInput } from '@/lib/generate'
+import { gerarSpec, isEtapaValida, type GerarInput } from '@/lib/generate'
+import { protegerValores } from '@/lib/text'
 import { gerarContentId } from '@/lib/content-id'
 import { getFormato, isFormatoValido, isTipoValido, TIPOS } from '@/lib/formats'
 import { renderSlidePng, logoDataUri } from '@/lib/render'
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo, newsjacking, tendencia_tema, mostrar_preco } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo, newsjacking, tendencia_tema, mostrar_preco, etapa } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -90,6 +91,7 @@ export async function POST(request: Request) {
       tendencia,
       fotos: listaFotos,
       mostrarPreco: mostrar_preco === true,
+      etapa: isEtapaValida(etapa) ? etapa : null,
     }
     const spec = await gerarSpec(brand, input)
 
@@ -112,10 +114,10 @@ export async function POST(request: Request) {
         tokens,
         ordem: slide.ordem,
         papel: slide.papel,
-        titulo: slide.titulo,
-        corpo: slide.corpo,
-        topicos: slide.topicos,
-        destaque: slide.destaque,
+        titulo: protegerValores(slide.titulo),
+        corpo: protegerValores(slide.corpo),
+        topicos: (slide.topicos ?? []).map(protegerValores),
+        destaque: protegerValores(slide.destaque),
         cidade: input.cidade ?? undefined,
         fotoUrl: fotoDoSlide(slide.foto_idx),
         logoUrl: logoImg,
