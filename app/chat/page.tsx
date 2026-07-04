@@ -184,9 +184,14 @@ export default function Chat() {
           </h1>
           <p className="text-xs text-neutral-500">Peça em português. O agente decide e gera — ou pergunta se faltar.</p>
         </div>
-        <Link href="/" className="text-sm text-violet-300 hover:text-violet-200">
-          Studio (manual) →
-        </Link>
+        <div className="flex gap-4 text-sm">
+          <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">
+            Aprovados
+          </Link>
+          <Link href="/" className="text-violet-300 hover:text-violet-200">
+            Studio (manual) →
+          </Link>
+        </div>
       </header>
 
       {/* Feed */}

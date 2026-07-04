@@ -17,6 +17,8 @@ export {
   aprovarPeca,
   rejeitarPeca,
   listarAprovados,
+  listarPecasAprovadas,
   type AprovarInput,
   type ExemploAprovado,
+  type PecaAprovada,
 } from './feedback'

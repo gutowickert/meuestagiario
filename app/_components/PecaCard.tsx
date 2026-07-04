@@ -27,6 +27,7 @@ export function PecaCard({
   ctaObjetivo,
   onAjustar,
   ajustando,
+  estadoInicial,
 }: {
   result: PecaResult
   brandId: string
@@ -34,12 +35,13 @@ export function PecaCard({
   ctaObjetivo?: string
   onAjustar?: (nota: string) => void
   ajustando?: boolean
+  estadoInicial?: 'aprovado' | 'rejeitado' | null
 }) {
   const [legenda, setLegenda] = useState(result.assets.legenda)
   const [opcoes, setOpcoes] = useState<string[] | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [feito, setFeito] = useState<'aprovado' | 'rejeitado' | null>(null)
+  const [feito, setFeito] = useState<'aprovado' | 'rejeitado' | null>(estadoInicial ?? null)
   const [enviandoFb, setEnviandoFb] = useState(false)
 
   async function feedback(acao: 'aprovar' | 'rejeitar') {

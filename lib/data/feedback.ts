@@ -48,6 +48,30 @@ export async function rejeitarPeca(content_piece_id: string, motivo?: string | n
   if (error) throw new Error(`rejeitarPeca falhou: ${error.message}`)
 }
 
+export interface PecaAprovada {
+  id: string
+  content_id: string
+  tipo: string
+  produto_id: string | null
+  atributos: Record<string, string>
+  assets: { slides: { ordem: number; papel: string; url: string }[]; legenda: string; hashtags: string[] }
+  criado_em: string
+}
+
+/** Lista as peças APROVADAS da marca (a gaveta de prontas — baixar/copiar). */
+export async function listarPecasAprovadas(brandId: string): Promise<PecaAprovada[]> {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .schema('estagiario')
+    .from('content_pieces')
+    .select('id, content_id, tipo, produto_id, atributos, assets, criado_em')
+    .eq('brand_id', brandId)
+    .eq('status', 'aprovado')
+    .order('criado_em', { ascending: false })
+  if (error) throw new Error(`listarPecasAprovadas falhou: ${error.message}`)
+  return (data ?? []) as unknown as PecaAprovada[]
+}
+
 export interface ExemploAprovado {
   tipo: string | null
   gancho: string
