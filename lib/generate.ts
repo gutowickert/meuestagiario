@@ -50,6 +50,7 @@ export interface GerarInput {
   exemplosAprovados?: { gancho: string; legenda: string }[] // few-shot da memória viva
   tendencia?: string | null // brief de newsjacking (surfar o que está em alta)
   fotos?: string[] // fotos reais anexadas (URLs) — o modelo VÊ e casa foto<->slide
+  mostrarPreco?: boolean // se pode citar preço/valores na peça (padrão: NÃO)
 }
 
 // Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
@@ -273,6 +274,9 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
     ehAnuncioImagem ? regraAnuncio : regraCarrossel,
     '',
     regraFotos,
+    input.mostrarPreco
+      ? 'PREÇO: pode citar preço/valores/parcelas se fizer sentido pra oferta.'
+      : 'PREÇO: NÃO mencione preço, valores, "R$", parcelas nem "de X por Y". Foque em valor, resultado e transformação. Nem na arte nem na legenda.',
     `Preencha atributos.formato exatamente com "${formato.id}".`,
   ]
     .filter(Boolean)

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
 
-    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo, newsjacking, tendencia_tema } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, tipo, formato, foto_capa, fotos, template, logo, logo_pos, cta_objetivo, newsjacking, tendencia_tema, mostrar_preco } =
       body as Record<string, unknown>
 
     // Validação de entrada
@@ -89,6 +89,7 @@ export async function POST(request: Request) {
       exemplosAprovados,
       tendencia,
       fotos: listaFotos,
+      mostrarPreco: mostrar_preco === true,
     }
     const spec = await gerarSpec(brand, input)
 

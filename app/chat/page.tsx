@@ -3,23 +3,11 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { resizeImage } from '@/lib/resize-image'
-import { baixarImagem, baixarTodas } from '@/lib/download'
+import { PecaCard, type PecaResult } from '@/app/_components/PecaCard'
 
 // Marca de teste (Carreira No Digital). Depois vira seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
 
-interface SlideAsset {
-  ordem: number
-  papel: string
-  url: string
-}
-interface GenerateResult {
-  id: string
-  content_id: string
-  tipo: string
-  atributos: Record<string, string>
-  assets: { slides: SlideAsset[]; legenda: string; hashtags: string[] }
-}
 interface Decisao {
   acao: 'perguntar' | 'gerar'
   mensagem: string
@@ -31,12 +19,13 @@ interface Decisao {
     tipo: string
     cta_objetivo: string
     briefing: string
+    mostrar_preco: boolean
   }
 }
 
 type FeedItem =
   | { kind: 'msg'; role: 'user' | 'assistant'; text: string }
-  | { kind: 'peca'; result: GenerateResult; produtoId: string; ctaObjetivo: string }
+  | { kind: 'peca'; result: PecaResult; produtoId: string; ctaObjetivo: string }
   | { kind: 'erro'; text: string }
 
 export default function Chat() {
@@ -139,6 +128,7 @@ export default function Chat() {
           formato: p.formato || 'feed_quadrado',
           template: p.template || undefined,
           cta_objetivo: p.cta_objetivo || undefined,
+          mostrar_preco: p.mostrar_preco === true,
           logo: true,
           logo_pos: 'sup_dir',
           fotos,
@@ -146,7 +136,7 @@ export default function Chat() {
       })
       const data = await resp.json()
       if (!resp.ok) throw new Error(data.error || `Erro ${resp.status}`)
-      setFeed((f) => [...f, { kind: 'peca', result: data as GenerateResult, produtoId: p.produto_id, ctaObjetivo: p.cta_objetivo }])
+      setFeed((f) => [...f, { kind: 'peca', result: data as PecaResult, produtoId: p.produto_id, ctaObjetivo: p.cta_objetivo }])
     } catch (err) {
       setFeed((f) => [...f, { kind: 'erro', text: err instanceof Error ? err.message : 'Falha ao gerar.' }])
     } finally {
@@ -225,7 +215,9 @@ export default function Chat() {
               )
             }
             // peça gerada
-            return <PecaCard key={i} result={item.result} produtoId={item.produtoId} ctaObjetivo={item.ctaObjetivo} />
+            return (
+              <PecaCard key={i} result={item.result} brandId={BRAND_ID} produtoId={item.produtoId} ctaObjetivo={item.ctaObjetivo} />
+            )
           })}
           {pensando ? <div className="text-sm text-neutral-500">O agente está pensando…</div> : null}
           {gerando ? <div className="text-sm text-neutral-500">Gerando a peça… (pode levar até ~40s)</div> : null}
@@ -295,165 +287,5 @@ export default function Chat() {
         </div>
       </div>
     </main>
-  )
-}
-
-// Card de uma peça gerada: mostra os slides + a legenda, com opções de legenda
-// SEM re-render (troca só o texto — VISAO §11 a).
-function PecaCard({ result, produtoId, ctaObjetivo }: { result: GenerateResult; produtoId: string; ctaObjetivo: string }) {
-  const [legenda, setLegenda] = useState(result.assets.legenda)
-  const [opcoes, setOpcoes] = useState<string[] | null>(null)
-  const [carregando, setCarregando] = useState(false)
-  const [erro, setErro] = useState<string | null>(null)
-  const [feito, setFeito] = useState<'aprovado' | 'rejeitado' | null>(null)
-  const [enviandoFb, setEnviandoFb] = useState(false)
-
-  async function feedback(acao: 'aprovar' | 'rejeitar') {
-    const motivo = acao === 'rejeitar' ? window.prompt('Por que não ficou bom? (opcional)') ?? undefined : undefined
-    setEnviandoFb(true)
-    setErro(null)
-    try {
-      const resp = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ piece_id: result.id, acao, brand_id: BRAND_ID, tipo: result.tipo, atributos: result.atributos, motivo }),
-      })
-      const data = await resp.json()
-      if (!resp.ok) throw new Error(data.error || 'Falha ao enviar feedback.')
-      setFeito(acao === 'aprovar' ? 'aprovado' : 'rejeitado')
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Falha ao enviar feedback.')
-    } finally {
-      setEnviandoFb(false)
-    }
-  }
-
-  async function buscarOpcoes() {
-    setCarregando(true)
-    setErro(null)
-    try {
-      const resp = await fetch('/api/legenda', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brand_id: BRAND_ID,
-          produto_id: produtoId || undefined,
-          atributos: result.atributos,
-          legenda_atual: legenda,
-          cta_objetivo: ctaObjetivo || undefined,
-        }),
-      })
-      const data = await resp.json()
-      if (!resp.ok) throw new Error(data.error || 'Falha ao gerar opções.')
-      setOpcoes(data.legendas ?? [])
-    } catch (e) {
-      setErro(e instanceof Error ? e.message : 'Falha ao gerar opções.')
-    } finally {
-      setCarregando(false)
-    }
-  }
-
-  return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
-      <div className="mb-3 flex flex-wrap gap-2 text-xs text-neutral-400">
-        <span className="rounded-full bg-neutral-800 px-2.5 py-1">
-          content_id: <code className="text-violet-300">{result.content_id}</code>
-        </span>
-        {Object.entries(result.atributos).map(([k, v]) => (
-          <span key={k} className="rounded-full bg-neutral-800 px-2.5 py-1">
-            {k}: <span className="text-neutral-200">{v}</span>
-          </span>
-        ))}
-      </div>
-      <div className="mb-2 flex justify-end">
-        <button
-          onClick={() => void baixarTodas(result.assets.slides, result.content_id)}
-          className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-800"
-        >
-          ⤓ Baixar todas
-        </button>
-      </div>
-      <div className="flex snap-x gap-3 overflow-x-auto pb-2">
-        {result.assets.slides.map((s) => (
-          <figure key={s.ordem} className="shrink-0 snap-start">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={s.url} alt={`slide ${s.ordem}`} className="h-72 w-auto rounded-xl border border-neutral-800" />
-            <figcaption className="mt-1 flex items-center justify-center gap-2 text-xs text-neutral-500">
-              <span>{s.ordem}. {s.papel}</span>
-              <button
-                onClick={() => void baixarImagem(s.url, `${result.content_id}-${String(s.ordem).padStart(2, '0')}.png`)}
-                className="text-violet-300 hover:text-violet-200"
-              >
-                baixar
-              </button>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-
-      {/* Legenda + opções (troca sem re-render) */}
-      <div className="mt-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-        <div className="mb-1 flex items-center justify-between">
-          <span className="text-xs font-semibold text-neutral-400">Legenda</span>
-          <button
-            onClick={() => void buscarOpcoes()}
-            disabled={carregando}
-            className="text-xs text-violet-300 hover:text-violet-200 disabled:opacity-50"
-          >
-            {carregando ? 'gerando…' : 'outras opções de legenda'}
-          </button>
-        </div>
-        <p className="whitespace-pre-wrap text-sm text-neutral-200">{legenda}</p>
-        <p className="mt-2 text-sm text-violet-300">{result.assets.hashtags.join('  ')}</p>
-        {erro ? <p className="mt-2 text-xs text-red-300">{erro}</p> : null}
-
-        {opcoes ? (
-          <div className="mt-3 flex flex-col gap-2 border-t border-neutral-800 pt-3">
-            <span className="text-xs text-neutral-500">Escolha uma (troca só o texto, sem regerar imagem):</span>
-            {opcoes.map((op, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setLegenda(op)
-                  setOpcoes(null)
-                }}
-                className="rounded-lg border border-neutral-800 bg-neutral-900 p-2.5 text-left text-sm text-neutral-200 transition hover:border-violet-600"
-              >
-                {op}
-              </button>
-            ))}
-            <button onClick={() => setOpcoes(null)} className="self-start text-xs text-neutral-500 hover:text-neutral-300">
-              cancelar
-            </button>
-          </div>
-        ) : null}
-      </div>
-
-      {/* Portão de aprovação — vira memória viva */}
-      <div className="mt-3 flex items-center gap-3 text-sm">
-        {feito ? (
-          <span className={feito === 'aprovado' ? 'text-emerald-400' : 'text-neutral-500'}>
-            {feito === 'aprovado' ? '✓ marcada como boa (vira exemplo pras próximas)' : '✕ rejeitada'}
-          </span>
-        ) : (
-          <>
-            <button
-              onClick={() => void feedback('aprovar')}
-              disabled={enviandoFb}
-              className="rounded-lg border border-emerald-800 px-3 py-1.5 text-emerald-300 transition hover:bg-emerald-950 disabled:opacity-50"
-            >
-              👍 Marcar boa
-            </button>
-            <button
-              onClick={() => void feedback('rejeitar')}
-              disabled={enviandoFb}
-              className="rounded-lg border border-neutral-700 px-3 py-1.5 text-neutral-400 transition hover:bg-neutral-800 disabled:opacity-50"
-            >
-              👎 Rejeitar
-            </button>
-          </>
-        )}
-      </div>
-    </div>
   )
 }

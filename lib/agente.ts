@@ -20,6 +20,7 @@ export interface DecisaoParametros {
   tipo: string
   cta_objetivo: string
   briefing: string
+  mostrar_preco: boolean
 }
 
 export interface Decisao {
@@ -53,8 +54,9 @@ const DECISAO_SCHEMA: Record<string, unknown> = {
         tipo: { type: 'string', description: `Um de: ${TIPOS.join(', ')}.` },
         cta_objetivo: { type: 'string', description: `Um de: ${CTAS.join(', ')}.` },
         briefing: { type: 'string', description: 'O brief consolidado pro gerador: ângulo, foco e ideia, em pt-BR.' },
+        mostrar_preco: { type: 'boolean', description: 'Mostrar preço/valores na peça? Padrão false; true SÓ se o usuário pedir explicitamente.' },
       },
-      required: ['produto_id', 'cidade', 'template', 'formato', 'tipo', 'cta_objetivo', 'briefing'],
+      required: ['produto_id', 'cidade', 'template', 'formato', 'tipo', 'cta_objetivo', 'briefing', 'mostrar_preco'],
     },
   },
   required: ['acao', 'mensagem', 'parametros'],
@@ -88,6 +90,7 @@ function sistema(brand: Brand, produtos: Produto[], numFotos: number): string {
     '  • A CIDADE/turma, se for peça de turma específica e não foi dita.',
     '- Junte o que faltar numa pergunta só, objetiva (ex.: "É pra qual produto e o CTA leva pra onde — WhatsApp, site ou inscrição?"). Não pergunte o que já dá pra decidir sozinho (estilo, formato…).',
     '- Quando acao="gerar", só preencha cta_objetivo com um valor que o usuário deixou claro (direta ou indiretamente). Se não deixou, use acao="perguntar".',
+    '- PREÇO: por padrão NÃO mostre preço (mostrar_preco=false). Só marque true se o usuário pedir explicitamente pra mostrar valores/preço.',
     '- NÃO peça foto obrigatoriamente: dá pra gerar sem (entra um placeholder). Só sugira foto se fizer muita diferença — e mesmo assim, prefira gerar.',
     '- Em acao="gerar", escreva no "briefing" um brief claro (ângulo/foco/ideia) e um "mensagem" curto do tipo "Fechou, gerando um carrossel de prova social pra imersão de Caxias, chamando pro WhatsApp.".',
     '- Fale como gente, pt-BR, próximo e direto (o tom da marca).',

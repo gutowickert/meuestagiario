@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CATALOGO, TEMPLATE_PADRAO_ID } from '@/lib/templates/catalogo'
 import { resizeImage } from '@/lib/resize-image'
-import { baixarImagem, baixarTodas } from '@/lib/download'
+import { PecaCard, type PecaResult } from '@/app/_components/PecaCard'
 
 // Brand de teste (Carreira No Digital). Depois vira um seletor de marcas.
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
@@ -15,16 +15,13 @@ interface ProdutoOpcao {
   nome: string
 }
 
-interface SlideAsset {
-  ordem: number
-  papel: string
-  url: string
-}
-interface GenerateResult {
-  content_id: string
-  atributos: Record<string, string>
-  assets: { slides: SlideAsset[]; legenda: string; hashtags: string[] }
-  tendencia?: string | null
+// Um anúncio no lote de "3 opções": ângulo pedido + resultado (ou gerando/erro).
+interface OpcaoLote {
+  angulo: string
+  briefing: string
+  result: PecaResult | null
+  estado: 'gerando' | 'pronto' | 'erro'
+  erro?: string
 }
 
 export default function Studio() {
@@ -42,11 +39,14 @@ export default function Studio() {
   const [briefing, setBriefing] = useState(
     'Anunciar a próxima turma de Anúncios para Negócios Locais, foco em dono de comércio que quer mais clientes.',
   )
+  const [mostrarPreco, setMostrarPreco] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [result, setResult] = useState<GenerateResult | null>(null)
+  const [result, setResult] = useState<PecaResult | null>(null)
   const [fotos, setFotos] = useState<string[]>([])
   const [subindoFoto, setSubindoFoto] = useState(false)
+  const [lote, setLote] = useState<OpcaoLote[]>([])
+  const [gerandoLote, setGerandoLote] = useState(false)
 
   // Carrega os produtos reais da marca (contexto), pra não anunciar "no vácuo".
   useEffect(() => {
@@ -85,37 +85,96 @@ export default function Studio() {
     }
   }
 
+  // Chamada única de geração — reusada pelo botão principal, pelo lote e pelo ajuste.
+  async function chamarGenerate(opts: {
+    briefing: string
+    tipo?: string
+    comNewsjacking?: boolean
+  }): Promise<PecaResult> {
+    const usarNews = opts.comNewsjacking ?? newsjacking
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        brand_id: BRAND_ID,
+        produto_id: produto,
+        cidade,
+        briefing: opts.briefing,
+        tipo: opts.tipo ?? tipo,
+        formato,
+        template,
+        logo: usarLogo,
+        logo_pos: usarLogo ? logoPos : 'oculto',
+        cta_objetivo: ctaObjetivo,
+        mostrar_preco: mostrarPreco,
+        newsjacking: usarNews,
+        tendencia_tema: usarNews && tendenciaTema.trim() ? tendenciaTema.trim() : undefined,
+        fotos,
+      }),
+    })
+    const data = await resp.json()
+    if (!resp.ok) throw new Error(data.error || `Erro ${resp.status}`)
+    return data as PecaResult
+  }
+
   async function gerar() {
     setLoading(true)
     setErro(null)
     setResult(null)
     try {
-      const resp = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brand_id: BRAND_ID,
-          produto_id: produto,
-          cidade,
-          briefing,
-          tipo,
-          formato,
-          template,
-          logo: usarLogo,
-          logo_pos: usarLogo ? logoPos : 'oculto',
-          cta_objetivo: ctaObjetivo,
-          newsjacking,
-          tendencia_tema: newsjacking && tendenciaTema.trim() ? tendenciaTema.trim() : undefined,
-          fotos,
-        }),
-      })
-      const data = await resp.json()
-      if (!resp.ok) throw new Error(data.error || `Erro ${resp.status}`)
-      setResult(data)
+      setResult(await chamarGenerate({ briefing }))
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Falha desconhecida.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 3 opções de anúncio (imagem única) com ângulos distintos — sem newsjacking
+  // (pra ser rápido). Você valida, marca boas e ajusta as que não.
+  const ANGULOS_LOTE = [
+    { angulo: 'Prova social', hint: 'Ângulo: PROVA SOCIAL — resultados/casos reais de alunos que geram desejo e confiança.' },
+    { angulo: 'Quebra de objeção', hint: 'Ângulo: QUEBRA DE OBJEÇÃO — pegue a objeção mais forte do público e desmonte.' },
+    { angulo: 'Oferta e urgência', hint: 'Ângulo: OFERTA/URGÊNCIA — turma, poucas vagas, motivo real pra agir agora.' },
+  ]
+
+  async function gerarLote() {
+    setErro(null)
+    setResult(null)
+    setGerandoLote(true)
+    const inicial: OpcaoLote[] = ANGULOS_LOTE.map((a) => ({
+      angulo: a.angulo,
+      briefing: `${briefing}\n\n${a.hint}`,
+      result: null,
+      estado: 'gerando',
+    }))
+    setLote(inicial)
+    await Promise.all(
+      inicial.map(async (op, i) => {
+        try {
+          const r = await chamarGenerate({ briefing: op.briefing, tipo: 'anuncio_imagem', comNewsjacking: false })
+          setLote((l) => l.map((x, j) => (j === i ? { ...x, result: r, estado: 'pronto' } : x)))
+        } catch (e) {
+          setLote((l) => l.map((x, j) => (j === i ? { ...x, estado: 'erro', erro: e instanceof Error ? e.message : 'Falha.' } : x)))
+        }
+      }),
+    )
+    setGerandoLote(false)
+  }
+
+  async function ajustarOpcao(i: number, nota: string) {
+    const op = lote[i]
+    if (!op) return
+    setLote((l) => l.map((x, j) => (j === i ? { ...x, estado: 'gerando' } : x)))
+    try {
+      const r = await chamarGenerate({
+        briefing: `${op.briefing}\n\nAJUSTE PEDIDO: ${nota}`,
+        tipo: 'anuncio_imagem',
+        comNewsjacking: false,
+      })
+      setLote((l) => l.map((x, j) => (j === i ? { ...x, result: r, estado: 'pronto' } : x)))
+    } catch (e) {
+      setLote((l) => l.map((x, j) => (j === i ? { ...x, estado: 'erro', erro: e instanceof Error ? e.message : 'Falha.' } : x)))
     }
   }
 
@@ -331,79 +390,71 @@ export default function Studio() {
             ) : null}
           </div>
 
-          <button
-            onClick={gerar}
-            disabled={loading || !briefing.trim()}
-            className="mt-1 rounded-lg bg-violet-600 px-5 py-3 font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? 'Gerando… (pode levar até ~40s)' : 'Gerar peça'}
-          </button>
+          {/* Preço: decidir ANTES de gerar (padrão: sem preço) */}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={mostrarPreco}
+              onChange={(e) => setMostrarPreco(e.target.checked)}
+              className="h-4 w-4 accent-violet-600"
+            />
+            <span className="text-neutral-300">Mostrar preço</span>
+            <span className="text-xs text-neutral-600">— desligado = nada de valores na peça/legenda</span>
+          </label>
+
+          <div className="mt-1 flex flex-wrap gap-3">
+            <button
+              onClick={gerar}
+              disabled={loading || gerandoLote || !briefing.trim()}
+              className="rounded-lg bg-violet-600 px-5 py-3 font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? 'Gerando… (pode levar até ~40s)' : 'Gerar peça'}
+            </button>
+            <button
+              onClick={() => void gerarLote()}
+              disabled={loading || gerandoLote || !briefing.trim()}
+              className="rounded-lg border border-violet-600 px-5 py-3 font-semibold text-violet-300 transition hover:bg-violet-600 hover:text-white disabled:opacity-50"
+              title="3 anúncios (imagem) com ângulos diferentes, pra você escolher"
+            >
+              {gerandoLote ? 'Gerando 3…' : 'Gerar 3 opções de anúncio'}
+            </button>
+          </div>
           {erro ? (
             <p className="rounded-lg bg-red-950 px-3 py-2 text-sm text-red-300">{erro}</p>
           ) : null}
         </section>
 
-        {/* Resultado */}
+        {/* Resultado único */}
         {result ? (
           <section className="mt-8">
-            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-neutral-400">
-              <span className="rounded-full bg-neutral-800 px-3 py-1">
-                content_id: <code className="text-violet-300">{result.content_id}</code>
-              </span>
-              {Object.entries(result.atributos).map(([k, v]) => (
-                <span key={k} className="rounded-full bg-neutral-800 px-3 py-1">
-                  {k}: <span className="text-neutral-200">{v}</span>
-                </span>
-              ))}
-            </div>
+            <PecaCard result={result} brandId={BRAND_ID} produtoId={produto} ctaObjetivo={ctaObjetivo} />
+          </section>
+        ) : null}
 
-            {/* Tendência usada (newsjacking) */}
-            {result.tendencia ? (
-              <details className="mb-4 rounded-2xl border border-violet-900 bg-neutral-900 p-4">
-                <summary className="cursor-pointer text-sm font-semibold text-violet-300">
-                  Tendência surfada (newsjacking)
-                </summary>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-neutral-300">{result.tendencia}</p>
-              </details>
-            ) : null}
-
-            {/* Galeria de slides */}
-            <div className="mb-2 flex justify-end">
-              <button
-                onClick={() => void baixarTodas(result.assets.slides, result.content_id)}
-                className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-neutral-800"
-              >
-                ⤓ Baixar todas
-              </button>
-            </div>
-            <div className="flex snap-x gap-4 overflow-x-auto pb-3">
-              {result.assets.slides.map((s) => (
-                <figure key={s.ordem} className="shrink-0 snap-start">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={s.url}
-                    alt={`slide ${s.ordem} (${s.papel})`}
-                    className="h-80 w-auto rounded-xl border border-neutral-800"
+        {/* Lote: 3 opções de anúncio */}
+        {lote.length > 0 ? (
+          <section className="mt-8 grid gap-6">
+            <h2 className="text-lg font-semibold">3 opções de anúncio — valide, marque 👍 e ajuste as que quiser</h2>
+            {lote.map((op, i) => (
+              <div key={i} className="grid gap-2">
+                <div className="text-sm font-semibold text-violet-300">
+                  Opção {i + 1}: {op.angulo}
+                </div>
+                {op.estado === 'gerando' ? (
+                  <p className="text-sm text-neutral-500">Gerando…</p>
+                ) : op.estado === 'erro' ? (
+                  <p className="rounded-lg bg-red-950 px-3 py-2 text-sm text-red-300">{op.erro}</p>
+                ) : op.result ? (
+                  <PecaCard
+                    result={op.result}
+                    brandId={BRAND_ID}
+                    produtoId={produto}
+                    ctaObjetivo={ctaObjetivo}
+                    onAjustar={(nota) => void ajustarOpcao(i, nota)}
                   />
-                  <figcaption className="mt-1 flex items-center justify-center gap-2 text-xs text-neutral-500">
-                    <span>{s.ordem}. {s.papel}</span>
-                    <button
-                      onClick={() => void baixarImagem(s.url, `${result.content_id}-${String(s.ordem).padStart(2, '0')}.png`)}
-                      className="text-violet-300 hover:text-violet-200"
-                    >
-                      baixar
-                    </button>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-
-            {/* Legenda + hashtags */}
-            <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-5">
-              <h2 className="mb-2 text-sm font-semibold text-neutral-400">Legenda</h2>
-              <p className="whitespace-pre-wrap text-neutral-200">{result.assets.legenda}</p>
-              <p className="mt-3 text-sm text-violet-300">{result.assets.hashtags.join('  ')}</p>
-            </div>
+                ) : null}
+              </div>
+            ))}
           </section>
         ) : null}
       </div>
