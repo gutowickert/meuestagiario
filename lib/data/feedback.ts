@@ -53,6 +53,7 @@ export interface PecaAprovada {
   content_id: string
   tipo: string
   produto_id: string | null
+  cidade: string | null
   atributos: Record<string, string>
   assets: { slides: { ordem: number; papel: string; url: string }[]; legenda: string; hashtags: string[] }
   criado_em: string
@@ -64,7 +65,7 @@ export async function listarPecasAprovadas(brandId: string): Promise<PecaAprovad
   const { data, error } = await supabase
     .schema('estagiario')
     .from('content_pieces')
-    .select('id, content_id, tipo, produto_id, atributos, assets, criado_em')
+    .select('id, content_id, tipo, produto_id, cidade, atributos, assets, criado_em')
     .eq('brand_id', brandId)
     .eq('status', 'aprovado')
     .order('criado_em', { ascending: false })

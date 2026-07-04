@@ -193,9 +193,7 @@ export default function Chat() {
           <Link href="/videos" className="text-violet-300 hover:text-violet-200">
             Vídeos
           </Link>
-          <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">
-            Aprovados
-          </Link>
+          <Link href="/repositorio" className="text-violet-300 hover:text-violet-200">Repositório</Link>
           <Link href="/" className="text-violet-300 hover:text-violet-200">
             Studio (manual) →
           </Link>

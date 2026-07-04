@@ -22,3 +22,10 @@ export {
   type ExemploAprovado,
   type PecaAprovada,
 } from './feedback'
+export {
+  inserirMidia,
+  listarMidias,
+  deletarMidia,
+  type Midia,
+  type MidiaInsert,
+} from './midias'

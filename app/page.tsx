@@ -46,6 +46,7 @@ export default function Studio() {
   const [result, setResult] = useState<PecaResult | null>(null)
   const [fotos, setFotos] = useState<string[]>([])
   const [subindoFoto, setSubindoFoto] = useState(false)
+  const [puxando, setPuxando] = useState(false)
   const [lote, setLote] = useState<OpcaoLote[]>([])
   const [gerandoLote, setGerandoLote] = useState(false)
 
@@ -60,6 +61,31 @@ export default function Studio() {
       })
       .catch(() => {})
   }, [])
+
+  async function puxarRepositorio() {
+    const codigo = produtos.find((p) => p.id === produto)?.codigo
+    if (!codigo || !cidade.trim()) {
+      setErro('Escolha o produto e a cidade pra puxar do repositório.')
+      return
+    }
+    setPuxando(true)
+    setErro(null)
+    try {
+      const r = await fetch(`/api/midias?brand_id=${BRAND_ID}&tipo=foto&produto=${encodeURIComponent(codigo)}&cidade=${encodeURIComponent(cidade)}`)
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Falha ao puxar do repositório.')
+      const urls: string[] = (d.midias ?? []).map((m: { url: string }) => m.url)
+      if (urls.length === 0) {
+        setErro(`Nenhuma foto no repositório pra ${codigo} · ${cidade}.`)
+        return
+      }
+      setFotos((atual) => [...atual, ...urls.filter((u) => !atual.includes(u))])
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Falha ao puxar do repositório.')
+    } finally {
+      setPuxando(false)
+    }
+  }
 
   async function subirFoto(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -202,9 +228,7 @@ export default function Studio() {
             <Link href="/videos" className="text-violet-300 hover:text-violet-200">
               Vídeos
             </Link>
-            <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">
-              Aprovados
-            </Link>
+            <Link href="/repositorio" className="text-violet-300 hover:text-violet-200">Repositório</Link>
             <Link href="/contexto" className="text-violet-300 hover:text-violet-200">
               Contexto da marca →
             </Link>
@@ -323,6 +347,15 @@ export default function Studio() {
                   disabled={subindoFoto}
                 />
               </label>
+              <button
+                type="button"
+                onClick={() => void puxarRepositorio()}
+                disabled={puxando}
+                title="Puxa as fotos do repositório da praça (produto + cidade)"
+                className="rounded-lg border border-violet-800 px-4 py-2 text-violet-300 transition hover:bg-violet-950 disabled:opacity-50"
+              >
+                {puxando ? 'Puxando…' : '↧ Repositório'}
+              </button>
               {fotos.length === 0 ? (
                 <span className="text-xs text-neutral-500">JPG, PNG ou WEBP · até 10MB cada</span>
               ) : null}

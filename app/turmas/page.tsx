@@ -77,6 +77,7 @@ export default function Turmas() {
   const [mostrarPreco, setMostrarPreco] = useState(false)
   const [etapa, setEtapa] = useState<'descoberta' | 'aquecimento' | 'remarketing'>('descoberta')
   const [ctaObjetivo, setCtaObjetivo] = useState('Chamar no WhatsApp pra garantir a vaga')
+  const [usarRepositorio, setUsarRepositorio] = useState(true)
 
   const [gerando, setGerando] = useState(false)
   const [anuncios, setAnuncios] = useState<Anuncio[]>([])
@@ -172,8 +173,29 @@ export default function Turmas() {
     if (selecionadas.length === 0 || gerando) return
     setGerando(true)
     setErro(null)
-    const inicial: Anuncio[] = selecionadas.flatMap((t) =>
-      ANGULOS.map((ang, k) => ({
+
+    // Abastece com as fotos do repositório de cada praça (produto+cidade), somadas
+    // às fotos anexadas manualmente à turma.
+    const repoPorPraca = new Map<string, string[]>()
+    if (usarRepositorio) {
+      const pracas = new Map<string, { produto: string; cidade: string }>()
+      for (const t of selecionadas) pracas.set(`${t.produto_codigo}||${t.cidade}`, { produto: t.produto_codigo, cidade: t.cidade })
+      await Promise.all(
+        Array.from(pracas.entries()).map(async ([k, pr]) => {
+          try {
+            const r = await fetch(`/api/midias?brand_id=${BRAND_ID}&tipo=foto&produto=${encodeURIComponent(pr.produto)}&cidade=${encodeURIComponent(pr.cidade)}`)
+            const d = await r.json()
+            repoPorPraca.set(k, (d.midias ?? []).map((m: { url: string }) => m.url))
+          } catch {
+            repoPorPraca.set(k, [])
+          }
+        }),
+      )
+    }
+
+    const inicial: Anuncio[] = selecionadas.flatMap((t) => {
+      const pool = [...t.fotos, ...(repoPorPraca.get(`${t.produto_codigo}||${t.cidade}`) ?? [])]
+      return ANGULOS.map((ang, k) => ({
         turmaCodigo: t.codigo,
         angulo: ang.angulo,
         briefing: `${t.briefing}\n\n${ang.hint}`,
@@ -181,11 +203,11 @@ export default function Turmas() {
         ctaObjetivo,
         // Distribui uma foto distinta por ângulo (evita a mesma foto nas 3 opções).
         // Com ≥3 fotos, cada ângulo pega a sua; com menos, rotaciona.
-        fotos: t.fotos.length > 0 ? [t.fotos[k % t.fotos.length]] : [],
+        fotos: pool.length > 0 ? [pool[k % pool.length]] : [],
         result: null,
         estado: 'gerando' as const,
-      })),
-    )
+      }))
+    })
     setAnuncios(inicial)
     await pool(
       inicial.map((a) => () => gerarUm(a)),
@@ -215,7 +237,7 @@ export default function Turmas() {
           <div className="flex gap-4 text-sm">
             <Link href="/chat" className="text-violet-300 hover:text-violet-200">Conversa</Link>
             <Link href="/videos" className="text-violet-300 hover:text-violet-200">Vídeos</Link>
-            <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">Aprovados</Link>
+            <Link href="/repositorio" className="text-violet-300 hover:text-violet-200">Repositório</Link>
             <Link href="/" className="text-violet-300 hover:text-violet-200">Studio →</Link>
           </div>
         </header>
@@ -252,6 +274,10 @@ export default function Turmas() {
                 <label className="flex cursor-pointer items-center gap-2 text-neutral-300">
                   <input type="checkbox" checked={mostrarPreco} onChange={(e) => setMostrarPreco(e.target.checked)} className="accent-violet-600" />
                   Mostrar preço
+                </label>
+                <label className="flex cursor-pointer items-center gap-2 text-neutral-300" title="Puxa as fotos do repositório da praça (produto+cidade) de cada turma">
+                  <input type="checkbox" checked={usarRepositorio} onChange={(e) => setUsarRepositorio(e.target.checked)} className="accent-violet-600" />
+                  Usar fotos do repositório
                 </label>
               </div>
             </div>

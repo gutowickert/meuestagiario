@@ -156,7 +156,7 @@ export default function Videos() {
           <div className="flex gap-4 text-sm">
             <Link href="/" className="text-violet-300 hover:text-violet-200">Studio</Link>
             <Link href="/turmas" className="text-violet-300 hover:text-violet-200">Turmas</Link>
-            <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">Aprovados</Link>
+            <Link href="/repositorio" className="text-violet-300 hover:text-violet-200">Repositório</Link>
           </div>
         </header>
 
