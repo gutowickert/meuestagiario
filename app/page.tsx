@@ -194,6 +194,9 @@ export default function Studio() {
             <Link href="/chat" className="text-violet-300 hover:text-violet-200">
               Conversa (agente)
             </Link>
+            <Link href="/turmas" className="text-violet-300 hover:text-violet-200">
+              Turmas em lote
+            </Link>
             <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">
               Aprovados
             </Link>

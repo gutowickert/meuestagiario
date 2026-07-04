@@ -185,6 +185,9 @@ export default function Chat() {
           <p className="text-xs text-neutral-500">Peça em português. O agente decide e gera — ou pergunta se faltar.</p>
         </div>
         <div className="flex gap-4 text-sm">
+          <Link href="/turmas" className="text-violet-300 hover:text-violet-200">
+            Turmas em lote
+          </Link>
           <Link href="/aprovados" className="text-violet-300 hover:text-violet-200">
             Aprovados
           </Link>

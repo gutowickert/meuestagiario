@@ -45,6 +45,9 @@ export default function Aprovados() {
             <Link href="/chat" className="text-violet-300 hover:text-violet-200">
               Conversa
             </Link>
+            <Link href="/turmas" className="text-violet-300 hover:text-violet-200">
+              Turmas em lote
+            </Link>
             <Link href="/" className="text-violet-300 hover:text-violet-200">
               Studio →
             </Link>
