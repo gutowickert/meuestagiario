@@ -16,7 +16,7 @@ export interface PecaResult {
   content_id: string
   tipo: string
   atributos: Record<string, string>
-  assets: { slides: SlideAsset[]; legenda: string; hashtags: string[] }
+  assets: { slides: SlideAsset[]; legenda: string; hashtags: string[]; inteligencia?: boolean }
   tendencia?: string | null
 }
 
@@ -100,6 +100,11 @@ export function PecaCard({
         <span className="rounded-full bg-neutral-800 px-2.5 py-1">
           content_id: <code className="text-violet-300">{result.content_id}</code>
         </span>
+        {result.assets.inteligencia ? (
+          <span className="rounded-full bg-emerald-950 px-2.5 py-1 text-emerald-300" title="Usou o dossiê de voz do cliente do CRM (Camada 3)">
+            🧠 voz do cliente
+          </span>
+        ) : null}
         {Object.entries(result.atributos).map(([k, v]) => (
           <span key={k} className="rounded-full bg-neutral-800 px-2.5 py-1">
             {k}: <span className="text-neutral-200">{v}</span>

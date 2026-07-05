@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       hashtags: roteiro.hashtags,
       roteiro: roteiro.blocos,
       duracao: roteiro.duracao,
+      inteligencia: !!inteligencia, // Camada 3 (voz do cliente) entrou neste roteiro?
     }
 
     const pieceId = await inserirContentPiece({

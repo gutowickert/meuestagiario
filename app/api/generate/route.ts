@@ -139,6 +139,7 @@ export async function POST(request: Request) {
       slides: slidesAssets,
       legenda: spec.legenda,
       hashtags: spec.hashtags,
+      inteligencia: !!inteligencia, // Camada 3 (voz do cliente) entrou nesta peça?
     }
 
     // 7. Grava a peça

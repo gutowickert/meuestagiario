@@ -15,7 +15,7 @@ export interface RoteiroResult {
   content_id: string
   tipo: string
   atributos: Record<string, string>
-  assets: { legenda: string; hashtags: string[]; roteiro: RoteiroBlocoAsset[]; duracao?: string }
+  assets: { legenda: string; hashtags: string[]; roteiro: RoteiroBlocoAsset[]; duracao?: string; inteligencia?: boolean }
 }
 
 function copiar(texto: string) {
@@ -81,6 +81,11 @@ export function RoteiroCard({
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
         <span className="rounded-full bg-neutral-800 px-2.5 py-1">🎬 roteiro</span>
         {result.assets.duracao ? <span className="rounded-full bg-neutral-800 px-2.5 py-1">{result.assets.duracao}</span> : null}
+        {result.assets.inteligencia ? (
+          <span className="rounded-full bg-emerald-950 px-2.5 py-1 text-emerald-300" title="Usou o dossiê de voz do cliente do CRM (Camada 3)">
+            🧠 voz do cliente
+          </span>
+        ) : null}
         {Object.entries(result.atributos)
           .filter(([k]) => k !== 'formato' && k !== 'gancho')
           .map(([k, v]) => (
