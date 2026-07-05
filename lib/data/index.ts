@@ -29,3 +29,4 @@ export {
   type Midia,
   type MidiaInsert,
 } from './midias'
+export { getDossieCliente, type DossieCliente } from './inteligencia'

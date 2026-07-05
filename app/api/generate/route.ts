@@ -1,6 +1,6 @@
 // POST /api/generate — o fluxo completo da Fatia 1.
 // briefing -> getBrand -> Claude (spec) -> render dos slides -> Storage -> content_pieces.
-import { getBrand, resolverProduto, inserirContentPiece, listarAprovados } from '@/lib/data'
+import { getBrand, resolverProduto, inserirContentPiece, listarAprovados, getDossieCliente } from '@/lib/data'
 import { buscarTendencia } from '@/lib/tendencias'
 import { gerarSpec, isEtapaValida, type GerarInput } from '@/lib/generate'
 import { protegerValores } from '@/lib/text'
@@ -61,6 +61,10 @@ export async function POST(request: Request) {
     const aprovados = await listarAprovados(brand_id).catch(() => [])
     const exemplosAprovados = aprovados.map((e) => ({ gancho: e.gancho, legenda: e.legenda }))
 
+    // 1e. Inteligência do cliente (Camada 3, do CRM) — por produto × cidade.
+    const cidadeStr = typeof cidade === 'string' ? cidade : null
+    const inteligencia = produto ? await getDossieCliente(produto.nome, cidadeStr) : null
+
     // 1d. Newsjacking (opcional): busca o que está em alta e vira brief de gancho.
     let tendencia: string | null = null
     if (newsjacking === true) {
@@ -92,6 +96,7 @@ export async function POST(request: Request) {
       fotos: listaFotos,
       mostrarPreco: mostrar_preco === true,
       etapa: isEtapaValida(etapa) ? etapa : null,
+      inteligencia,
     }
     const spec = await gerarSpec(brand, input)
 

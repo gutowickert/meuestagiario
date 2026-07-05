@@ -1,7 +1,9 @@
-// Upload de mídia pro repositório (client). Foto é redimensionada; o arquivo sobe
-// DIRETO no Storage via URL assinada (não passa pelo body da função — vídeo é grande),
-// e depois registra a mídia na praça (produto+cidade).
-import { resizeImage } from './resize-image'
+// Upload de mídia pro repositório (client).
+//  - FOTO: converte HEIC->JPEG, redimensiona e sobe pela rota same-origin /api/upload
+//    (confiável; a foto resa fica bem abaixo do limite de body).
+//  - VÍDEO: sobe DIRETO no Storage via URL assinada (é grande demais pro body da função).
+// Depois registra a mídia na praça (produto+cidade).
+import { prepararImagem } from './prepara-imagem'
 
 export interface MidiaSalva {
   id: string
@@ -14,34 +16,35 @@ export interface MidiaSalva {
   criado_em: string
 }
 
-export async function subirMidia(params: {
-  brandId: string
-  produto: string | null
-  cidade: string | null
-  tipo: 'foto' | 'video'
-  file: File
-}): Promise<MidiaSalva> {
-  let corpo: Blob = params.file
-  let mime = params.file.type || (params.tipo === 'video' ? 'video/mp4' : 'image/jpeg')
-  if (params.tipo === 'foto') {
-    corpo = await resizeImage(params.file, 1920)
-    mime = corpo.type || 'image/jpeg'
-  }
+async function subirFotoServidor(blob: Blob, mime: string): Promise<string> {
+  const resp = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': mime }, body: blob })
+  const data = await resp.json()
+  if (!resp.ok) throw new Error(data.error || 'Falha ao subir a foto.')
+  return data.url as string
+}
 
-  // 1. Assina o upload
+async function subirVideoAssinado(file: File): Promise<string> {
+  const mime = file.type || 'video/mp4'
   const s = await fetch('/api/midias/sign', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mime }),
   })
   const sd = await s.json()
-  if (!s.ok) throw new Error(sd.error || 'Falha ao assinar o upload.')
+  if (!s.ok) throw new Error(sd.error || 'Falha ao assinar o upload do vídeo.')
+  const put = await fetch(sd.uploadUrl, { method: 'PUT', headers: { 'Content-Type': mime }, body: file })
+  if (!put.ok) throw new Error(`Falha ao subir o vídeo no Storage (${put.status}).`)
+  return sd.publicUrl as string
+}
 
-  // 2. Sobe direto no Storage
-  const put = await fetch(sd.uploadUrl, { method: 'PUT', headers: { 'Content-Type': mime }, body: corpo })
-  if (!put.ok) throw new Error(`Falha ao subir o arquivo (${put.status}).`)
-
-  // 3. Registra a mídia na praça
+async function registrar(params: {
+  brandId: string
+  produto: string | null
+  cidade: string | null
+  tipo: 'foto' | 'video'
+  url: string
+  mime: string
+}): Promise<MidiaSalva> {
   const r = await fetch('/api/midias', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -50,11 +53,27 @@ export async function subirMidia(params: {
       produto: params.produto,
       cidade: params.cidade,
       tipo: params.tipo,
-      url: sd.publicUrl,
-      mime,
+      url: params.url,
+      mime: params.mime,
     }),
   })
   const rd = await r.json()
   if (!r.ok) throw new Error(rd.error || 'Falha ao registrar a mídia.')
   return rd.midia as MidiaSalva
+}
+
+export async function subirMidia(params: {
+  brandId: string
+  produto: string | null
+  cidade: string | null
+  tipo: 'foto' | 'video'
+  file: File
+}): Promise<MidiaSalva> {
+  if (params.tipo === 'video') {
+    const url = await subirVideoAssinado(params.file)
+    return registrar({ ...params, url, mime: params.file.type || 'video/mp4' })
+  }
+  const { blob, mime } = await prepararImagem(params.file, 1920)
+  const url = await subirFotoServidor(blob, mime)
+  return registrar({ ...params, url, mime })
 }

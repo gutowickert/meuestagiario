@@ -13,6 +13,7 @@ import { subirMidia } from '@/lib/upload-midia'
 const BRAND_ID = 'a1111111-1111-4111-8111-111111111111'
 
 const CIDADES = ['Porto Alegre', 'Novo Hamburgo', 'Canoas', 'Lajeado', 'Caxias do Sul', 'Santa Cruz do Sul']
+const GERAL = '__geral__' // praça "conteúdo geral da escola" (sem produto/cidade)
 
 interface ProdutoOpcao { id: string; codigo: string | null; nome: string }
 interface Midia { id: string; produto: string | null; cidade: string | null; tipo: 'foto' | 'video'; url: string; nota: string | null }
@@ -100,12 +101,15 @@ export default function Repositorio() {
     setSubindo(true)
     setErro(null)
     try {
+      const geral = addProduto === GERAL
+      const prod = geral ? null : addProduto || null
+      const cid = geral ? null : addCidade || null
       for (const file of files) {
         const tipo: 'foto' | 'video' = file.type.startsWith('video') ? 'video' : 'foto'
-        const nova = await subirMidia({ brandId: BRAND_ID, produto: addProduto || null, cidade: addCidade || null, tipo, file })
+        const nova = await subirMidia({ brandId: BRAND_ID, produto: prod, cidade: cid, tipo, file })
         setMidias((ms) => [{ id: nova.id, produto: nova.produto, cidade: nova.cidade, tipo: nova.tipo, url: nova.url, nota: nova.nota }, ...ms])
       }
-      setAberta(chavePraca(addProduto, addCidade))
+      setAberta(chavePraca(prod, cid))
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Falha ao subir material.')
     } finally {
@@ -146,6 +150,7 @@ export default function Repositorio() {
             <div>
               <label className="mb-1 block text-xs text-neutral-400">Produto</label>
               <select value={addProduto} onChange={(e) => setAddProduto(e.target.value)} className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-violet-500">
+                <option value={GERAL}>Geral / escola (sem produto)</option>
                 {produtos.map((p) => (
                   <option key={p.id} value={p.codigo ?? ''}>{p.nome}{p.codigo ? ` (${p.codigo})` : ''}</option>
                 ))}
@@ -153,15 +158,18 @@ export default function Repositorio() {
             </div>
             <div>
               <label className="mb-1 block text-xs text-neutral-400">Cidade</label>
-              <select value={addCidade} onChange={(e) => setAddCidade(e.target.value)} className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-violet-500">
+              <select value={addCidade} onChange={(e) => setAddCidade(e.target.value)} disabled={addProduto === GERAL} className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-violet-500 disabled:opacity-40">
                 {CIDADES.map((c) => (<option key={c} value={c}>{c}</option>))}
               </select>
             </div>
             <label className="cursor-pointer rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-500">
               {subindo ? 'Subindo…' : '＋ Enviar arquivos'}
-              <input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" multiple className="hidden" onChange={adicionar} disabled={subindo} />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,video/mp4,video/quicktime,video/webm" multiple className="hidden" onChange={adicionar} disabled={subindo} />
             </label>
           </div>
+          {addProduto === GERAL ? (
+            <p className="mt-2 text-xs text-neutral-500">Conteúdo geral da escola — pra orgânico e demandas que não são de uma turma específica.</p>
+          ) : null}
         </section>
 
         {carregando ? (
@@ -180,7 +188,11 @@ export default function Repositorio() {
                   <button onClick={() => setAberta(isAberta ? null : k)} className="flex w-full items-center justify-between px-5 py-4 text-left">
                     <div>
                       <div className="text-lg font-semibold">
-                        {nomeProduto(pr.produto || null)} <span className="text-violet-400">· {pr.cidade || 'sem cidade'}</span>
+                        {!pr.produto && !pr.cidade ? (
+                          <>Conteúdo geral <span className="text-violet-400">· Escola</span></>
+                        ) : (
+                          <>{nomeProduto(pr.produto || null)} <span className="text-violet-400">· {pr.cidade || 'sem cidade'}</span></>
+                        )}
                       </div>
                       <div className="mt-0.5 flex gap-3 text-xs text-neutral-500">
                         <span>📸 {nFotos} foto(s)</span>

@@ -12,6 +12,7 @@ import {
   blocoProduto,
   blocoExemplos,
   blocoEtapa,
+  blocoInteligencia,
   CTA_INSTRUCAO,
   type Atributos,
   type EtapaFunil,
@@ -42,6 +43,7 @@ export interface RoteiroInput {
   etapa?: EtapaFunil | null
   mostrarPreco?: boolean
   exemplosAprovados?: { gancho: string; legenda: string }[]
+  inteligencia?: unknown | null // Camada 3: dossiê "voz do cliente" do CRM
 }
 
 // ---- Schema (structured output) ----
@@ -133,6 +135,8 @@ export async function gerarRoteiro(brand: Brand, input: RoteiroInput): Promise<R
   ]
   const prod = blocoProduto(input.produto)
   if (prod) system.push({ type: 'text', text: prod })
+  const intel = blocoInteligencia(input.inteligencia)
+  if (intel) system.push({ type: 'text', text: intel, cache_control: { type: 'ephemeral' } })
   const ex = blocoExemplos(input.exemplosAprovados)
   if (ex) system.push({ type: 'text', text: ex })
 

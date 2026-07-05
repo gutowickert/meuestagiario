@@ -1,7 +1,7 @@
 // POST /api/roteiro — copy de vídeo (roteiro falado + legenda). Sem render de
 // imagem: o entregável é texto. Gera com o Claude, salva a peça (tipo 'reel')
 // pra passar pelo mesmo portão de aprovação, e devolve o roteiro.
-import { getBrand, resolverProduto, inserirContentPiece, listarAprovados } from '@/lib/data'
+import { getBrand, resolverProduto, inserirContentPiece, listarAprovados, getDossieCliente } from '@/lib/data'
 import { gerarRoteiro, type RoteiroInput } from '@/lib/roteiro'
 import { isEtapaValida } from '@/lib/generate'
 import { gerarContentId } from '@/lib/content-id'
@@ -32,6 +32,9 @@ export async function POST(request: Request) {
     const aprovados = await listarAprovados(brand_id).catch(() => [])
     const exemplosAprovados = aprovados.map((e) => ({ gancho: e.gancho, legenda: e.legenda }))
 
+    const cidadeStr = typeof cidade === 'string' ? cidade : null
+    const inteligencia = produto ? await getDossieCliente(produto.nome, cidadeStr) : null
+
     const input: RoteiroInput = {
       produto,
       produto_id: produtoAtributo,
@@ -42,6 +45,7 @@ export async function POST(request: Request) {
       etapa: isEtapaValida(etapa) ? etapa : null,
       mostrarPreco: mostrar_preco === true,
       exemplosAprovados,
+      inteligencia,
     }
 
     const roteiro = await gerarRoteiro(brand, input)

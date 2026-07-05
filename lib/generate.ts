@@ -52,6 +52,7 @@ export interface GerarInput {
   fotos?: string[] // fotos reais anexadas (URLs) — o modelo VÊ e casa foto<->slide
   mostrarPreco?: boolean // se pode citar preço/valores na peça (padrão: NÃO)
   etapa?: EtapaFunil | null // onde no funil essa peça entra — muda a estratégia da copy
+  inteligencia?: unknown | null // Camada 3: dossiê "voz do cliente" do CRM (produto×cidade)
 }
 
 // ---- Etapa do funil (estratégia de campanha) ----
@@ -239,6 +240,17 @@ function blocoTendencia(tendencia: string | null | undefined): string | null {
   ].join('\n')
 }
 
+// Camada 3 (o que VENDE): dossiê da voz real do cliente, destilado das conversas
+// do CRM por produto × cidade. É a maior fonte de assertividade.
+export function blocoInteligencia(dossie: unknown): string | null {
+  if (!dossie || typeof dossie !== 'object' || Object.keys(dossie as object).length === 0) return null
+  return [
+    'INTELIGÊNCIA DO CLIENTE (VOZ REAL — destilada das conversas do CRM DESTE produto/praça). É a Camada 3: o que de fato VENDE.',
+    'USE assim: fale as DORES e DESEJOS reais nas palavras deles (aproveite as FRASES LITERAIS); acione os GATILHOS de compra que converteram; PREEMPTE as objeções reais; evite os MOTIVOS DE PERDA; priorize os ÂNGULOS que funcionaram (respeitando orgânico × anúncio). Não invente nada além do que está aqui — se um campo estiver vazio, ignore-o.',
+    JSON.stringify(dossie, null, 2),
+  ].join('\n')
+}
+
 function instrucaoSistema(): string {
   return [
     'Você é um COPYWRITER SÊNIOR de resposta direta, especialista em negócios locais. Sua copy faz a pessoa parar o dedo e agir.',
@@ -355,6 +367,9 @@ export async function gerarSpec(brand: Brand, input: GerarInput): Promise<Spec> 
   const produtoBloco = blocoProduto(input.produto)
   // Contexto do produto: estável por produto -> segundo breakpoint de cache.
   if (produtoBloco) system.push({ type: 'text', text: produtoBloco, cache_control: { type: 'ephemeral' } })
+  // Inteligência do cliente (Camada 3): estável por produto×cidade -> cacheável.
+  const inteligenciaBloco = blocoInteligencia(input.inteligencia)
+  if (inteligenciaBloco) system.push({ type: 'text', text: inteligenciaBloco, cache_control: { type: 'ephemeral' } })
   // Exemplos aprovados: mudam a cada aprovação -> sem cache.
   const exemplosBloco = blocoExemplos(input.exemplosAprovados)
   if (exemplosBloco) system.push({ type: 'text', text: exemplosBloco })
