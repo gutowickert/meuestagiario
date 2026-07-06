@@ -102,14 +102,24 @@ export function blocoEtapa(etapa: EtapaFunil): string {
 export type ObjetivoPeca = 'anuncio' | 'organico'
 
 // Diretriz que transforma a peça em CONTEÚDO ORGÂNICO — muda tom, gancho e CTA.
+// O objetivo é copy que NÃO parece marketing: nativa, inteligente, provocativa.
 export function diretrizOrganico(): string {
   return [
-    'ESTA PEÇA É CONTEÚDO ORGÂNICO — NÃO é anúncio. O objetivo é gerar VALOR, conexão e autoridade; construir audiência e relação — NÃO vender direto.',
-    '- PROIBIDO gancho de anúncio ("seu cliente está te procurando", "pare de perder vendas", "você paga e ninguém vem") e PROIBIDO oferta/urgência de venda ("garanta sua vaga", "últimas vagas", "acesse o site", "link na bio").',
-    '- Fale como GENTE DE VERDADE / dono da escola: história, bastidores, celebração, ensino, opinião, prova contada como CASO/HISTÓRIA. Autêntico, caloroso, humano — não vendedor.',
-    '- O GANCHO prende por curiosidade, emoção ou valor (não por dor de venda). Entregue algo que valha assistir/ler mesmo pra quem nunca vai comprar.',
-    '- CTA é LEVE e de RELACIONAMENTO: seguir pra acompanhar, salvar, comentar, marcar alguém — ou nenhuma chamada dura. NUNCA mande pro site/inscrição/WhatsApp de venda.',
-    '- Pode citar cursos/turmas com naturalidade (contexto da história), sem vender.',
+    'ESTA PEÇA É CONTEÚDO ORGÂNICO — tem que parecer um post NATIVO de uma pessoa real e inteligente, não uma peça de marketing. Se soar a anúncio ou a "conteúdo de marca", FALHOU.',
+    '',
+    'VOZ E OFÍCIO (é isto que separa do genérico — leve a sério):',
+    '- Escreva como GENTE INTELIGENTE conversando, com PONTO DE VISTA. Uma opinião, uma verdade que a pessoa sente mas nunca verbalizou. Marca não tem opinião; gente tem.',
+    '- Abra PROVOCATIVO e CONTRAINTUITIVO: contrarie o senso comum, quebre uma crença, exponha uma ironia. A 1ª linha é um PENSAMENTO real, não um "você sabia?" nem aquecimento morno.',
+    '- Trabalhe a DOR DE LADO, com leveza — humor, ironia fina, autoironia. Rir do problema desarma mais que apontar o dedo. Nada de "sofrimento na cara" nem tom de coach.',
+    '- ESPECÍFICO e REAL vence sempre: uma cena concreta, um detalhe verdadeiro, um número, um diálogo curto. Detalhe real mata o genérico.',
+    '- Ritmo de conversa de mesa de bar inteligente, não de palestra. Pode ter humor, exagero proposital, uma virada inesperada no fim.',
+    '- CTA levíssimo ou NENHUM. Se fechar, feche com uma frase que faz PENSAR ou RIR — não com pedido. Nada de "segue pra mais", "salva esse post", "link na bio", "garanta sua vaga".',
+    '',
+    'PROIBIDO (é o que faz soar genérico e marketeiro):',
+    '- Clichê de guru/motivacional ("transforme sua vida", "descomplicar", "o segredo que ninguém conta", "vim aqui te falar").',
+    '- Listona óbvia, tom institucional, "dica de valor" com cara de aula chata, definição de dicionário.',
+    '- Gancho de venda ("seu cliente está te procurando", "pare de perder vendas") e emoji/hashtag em excesso.',
+    'Pode citar cursos/turmas com naturalidade, como contexto da história — nunca como oferta.',
   ].join('\n')
 }
 
@@ -259,7 +269,7 @@ export function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string
   ].join('\n')
 }
 
-function blocoTendencia(tendencia: string | null | undefined): string | null {
+export function blocoTendencia(tendencia: string | null | undefined): string | null {
   if (!tendencia || !tendencia.trim()) return null
   return [
     'TENDÊNCIA PRA SURFAR (newsjacking — puxe este assunto quente e conecte ao negócio de forma inteligente e natural, sem forçar):',

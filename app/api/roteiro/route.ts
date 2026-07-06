@@ -4,6 +4,7 @@
 import { getBrand, resolverProduto, inserirContentPiece, listarAprovados, getDossieCliente } from '@/lib/data'
 import { gerarRoteiro, type RoteiroInput } from '@/lib/roteiro'
 import { isEtapaValida } from '@/lib/generate'
+import { buscarTendencia } from '@/lib/tendencias'
 import { gerarContentId } from '@/lib/content-id'
 
 export const maxDuration = 120
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
     if (!body || typeof body !== 'object') {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
-    const { brand_id, produto_id, turma_id, cidade, briefing, situacao, cta_objetivo, etapa, mostrar_preco, objetivo } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, situacao, cta_objetivo, etapa, mostrar_preco, objetivo, newsjacking, tendencia_tema } =
       body as Record<string, unknown>
 
     if (typeof brand_id !== 'string' || !brand_id) {
@@ -35,6 +36,11 @@ export async function POST(request: Request) {
     const cidadeStr = typeof cidade === 'string' ? cidade : null
     const inteligencia = produto ? await getDossieCliente(produto.nome, cidadeStr) : null
 
+    let tendencia: string | null = null
+    if (newsjacking === true) {
+      tendencia = await buscarTendencia(brand, produto, typeof tendencia_tema === 'string' ? tendencia_tema : null).catch(() => null)
+    }
+
     const input: RoteiroInput = {
       produto,
       produto_id: produtoAtributo,
@@ -47,6 +53,7 @@ export async function POST(request: Request) {
       exemplosAprovados,
       inteligencia,
       objetivo: objetivo === 'organico' ? 'organico' : 'anuncio',
+      tendencia,
     }
 
     const roteiro = await gerarRoteiro(brand, input)

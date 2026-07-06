@@ -14,6 +14,7 @@ import {
   blocoEtapa,
   blocoEtapaOrganico,
   blocoInteligencia,
+  blocoTendencia,
   diretrizOrganico,
   CTA_INSTRUCAO,
   type Atributos,
@@ -48,6 +49,7 @@ export interface RoteiroInput {
   exemplosAprovados?: { gancho: string; legenda: string }[]
   inteligencia?: unknown | null // Camada 3: dossiê "voz do cliente" do CRM
   objetivo?: ObjetivoPeca | null // 'anuncio' (padrão) | 'organico'
+  tendencia?: string | null // brief de newsjacking (surfar o que está em alta)
 }
 
 // ---- Schema (structured output) ----
@@ -157,6 +159,8 @@ export async function gerarRoteiro(brand: Brand, input: RoteiroInput): Promise<R
   if (prod) system.push({ type: 'text', text: prod })
   const intel = blocoInteligencia(input.inteligencia)
   if (intel) system.push({ type: 'text', text: intel, cache_control: { type: 'ephemeral' } })
+  const tend = blocoTendencia(input.tendencia)
+  if (tend) system.push({ type: 'text', text: tend })
   const ex = blocoExemplos(input.exemplosAprovados)
   if (ex) system.push({ type: 'text', text: ex })
 
