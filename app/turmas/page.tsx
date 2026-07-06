@@ -51,6 +51,7 @@ interface Anuncio {
   produtoId: string
   ctaObjetivo: string
   fotos: string[]
+  fotoPrincipal?: number
   result: PecaResult | null
   estado: 'gerando' | 'pronto' | 'erro'
   erro?: string
@@ -159,6 +160,7 @@ export default function Turmas() {
           etapa,
           newsjacking: false,
           fotos: a.fotos,
+          foto_principal: a.fotoPrincipal,
         }),
       })
       const data = await resp.json()
@@ -201,9 +203,10 @@ export default function Turmas() {
         briefing: `${t.briefing}\n\n${ang.hint}`,
         produtoId: t.produto_id ?? t.produto_codigo,
         ctaObjetivo,
-        // Distribui uma foto distinta por ângulo (evita a mesma foto nas 3 opções).
-        // Com ≥3 fotos, cada ângulo pega a sua; com menos, rotaciona.
-        fotos: pool.length > 0 ? [pool[k % pool.length]] : [],
+        // Passa TODAS as fotos (o modelo vê e casa copy↔foto), com a protagonista
+        // rodando por ângulo pra as 3 não caírem na mesma foto.
+        fotos: pool,
+        fotoPrincipal: pool.length > 0 ? k % pool.length : undefined,
         result: null,
         estado: 'gerando' as const,
       }))

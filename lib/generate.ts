@@ -50,6 +50,7 @@ export interface GerarInput {
   exemplosAprovados?: { gancho: string; legenda: string }[] // few-shot da memória viva
   tendencia?: string | null // brief de newsjacking (surfar o que está em alta)
   fotos?: string[] // fotos reais anexadas (URLs) — o modelo VÊ e casa foto<->slide
+  fotoPrincipal?: number | null // índice da foto protagonista (dá variedade entre opções do lote)
   mostrarPreco?: boolean // se pode citar preço/valores na peça (padrão: NÃO)
   etapa?: EtapaFunil | null // onde no funil essa peça entra — muda a estratégia da copy
   inteligencia?: unknown | null // Camada 3: dossiê "voz do cliente" do CRM (produto×cidade)
@@ -265,8 +266,9 @@ export function blocoExemplos(exemplos: GerarInput['exemplosAprovados']): string
     .map((e, i) => `${i + 1}. Gancho: ${e.gancho}\n   Legenda: ${e.legenda}`)
     .join('\n')
   return [
-    'EXEMPLOS APROVADOS (peças que o dono da marca JÁ aprovou — siga este padrão de gancho e voz; inspire-se, não copie literalmente):',
+    'EXEMPLOS APROVADOS (o dono JÁ aprovou estas peças — são REFERÊNCIA de VOZ, tom e nível de qualidade, NÃO um modelo pra repetir):',
     itens,
+    'REGRA: NÃO reaproveite os ganchos, as frases nem a estrutura destes exemplos. Cada nova peça precisa de um GANCHO e um ÂNGULO CLARAMENTE DIFERENTES. Use os exemplos só pra calibrar a voz e a régua de qualidade — se o briefing for parecido, ainda assim mude o gancho, o ângulo e as palavras. Repetir a copy aprovada é ERRO.',
   ].join('\n')
 }
 
@@ -352,13 +354,19 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
   ].join('\n')
 
   const n = input.fotos?.length ?? 0
+  const fp =
+    typeof input.fotoPrincipal === 'number' && input.fotoPrincipal >= 0 && input.fotoPrincipal < n
+      ? input.fotoPrincipal
+      : null
   const regraFotos =
     n > 0
       ? [
-          `FOTOS ANEXADAS: ${n} foto(s) reais seguem como blocos de imagem, na ordem (índice 0 a ${n - 1}). VOCÊ AS VÊ.`,
-          'Para CADA slide, escolha em "foto_idx" o índice da foto que melhor combina com a MENSAGEM e o PAPEL do slide (a capa/gancho normalmente pede a foto mais forte/representativa). Use -1 quando o slide fica melhor só com texto.',
-          'A copy e a "direcao_visual" devem CASAR com o que a foto escolhida REALMENTE mostra (pessoas, cenário, objeto). Não descreva algo que não está na foto.',
-          'Evite repetir a mesma foto em vários slides sem motivo. Se uma foto for ruim (escura, cortada, fora de contexto), não use (-1).',
+          `FOTOS ANEXADAS: ${n} foto(s) reais seguem como blocos de imagem, na ordem (índice 0 a ${n - 1}). VOCÊ AS VÊ — olhe CADA uma antes de escrever.`,
+          fp !== null
+            ? `PROTAGONISTA: use a foto de índice ${fp} como principal (foto_idx = ${fp} no slide único). Ela foi escolhida pra dar VARIEDADE entre as opções — não caia sempre na foto 0.`
+            : 'Para CADA slide, escolha em "foto_idx" o índice da foto que melhor combina com a MENSAGEM e o PAPEL do slide. Não use sempre a foto 0 por padrão — escolha pelo conteúdo. Use -1 só quando o slide fica melhor sem foto.',
+          'COERÊNCIA OBRIGATÓRIA (foto ↔ copy): a headline, o corpo e a legenda só podem AFIRMAR o que está VISÍVEL na foto usada. Se a copy fala "professor do lado", "sala cheia", "aluno praticando", "resultado na tela", a foto ESCOLHIDA precisa mostrar isso de fato — senão, NÃO diga aquilo (ou escolha a foto que mostra). NUNCA descreva pessoas/cenas que não estão na imagem.',
+          'Evite repetir a mesma foto sem motivo. Se uma foto for ruim (escura, cortada, fora de contexto), não use (-1).',
         ].join('\n')
       : 'Não há fotos anexadas: preencha "foto_idx" com -1 em TODOS os slides.'
 

@@ -117,6 +117,7 @@ export default function Studio() {
     briefing: string
     tipo?: string
     comNewsjacking?: boolean
+    fotoPrincipal?: number
   }): Promise<PecaResult> {
     const usarNews = opts.comNewsjacking ?? newsjacking
     const resp = await fetch('/api/generate', {
@@ -138,6 +139,7 @@ export default function Studio() {
         newsjacking: usarNews,
         tendencia_tema: usarNews && tendenciaTema.trim() ? tendenciaTema.trim() : undefined,
         fotos,
+        foto_principal: opts.fotoPrincipal,
       }),
     })
     const data = await resp.json()
@@ -180,7 +182,9 @@ export default function Studio() {
     await Promise.all(
       inicial.map(async (op, i) => {
         try {
-          const r = await chamarGenerate({ briefing: op.briefing, tipo: 'anuncio_imagem', comNewsjacking: false })
+          // Foto protagonista roda por opção (i) pra as 3 não caírem na mesma foto.
+          const fp = fotos.length > 0 ? i % fotos.length : undefined
+          const r = await chamarGenerate({ briefing: op.briefing, tipo: 'anuncio_imagem', comNewsjacking: false, fotoPrincipal: fp })
           setLote((l) => l.map((x, j) => (j === i ? { ...x, result: r, estado: 'pronto' } : x)))
         } catch (e) {
           setLote((l) => l.map((x, j) => (j === i ? { ...x, estado: 'erro', erro: e instanceof Error ? e.message : 'Falha.' } : x)))
