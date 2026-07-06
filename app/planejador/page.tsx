@@ -104,7 +104,7 @@ export default function Planejador() {
         const resp = await fetch('/api/roteiro', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brand_id: BRAND_ID, produto_id: produtoId || undefined, cidade: cidade || undefined, briefing, etapa: it.etapa, cta_objetivo: 'perfil', mostrar_preco: false }),
+          body: JSON.stringify({ brand_id: BRAND_ID, produto_id: produtoId || undefined, cidade: cidade || undefined, briefing, etapa: it.etapa, objetivo: 'organico', cta_objetivo: 'perfil', mostrar_preco: false }),
         })
         const data = await resp.json()
         if (!resp.ok) throw new Error(data.error || `Erro ${resp.status}`)
@@ -114,7 +114,7 @@ export default function Planejador() {
         const resp = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brand_id: BRAND_ID, produto_id: produtoId || undefined, cidade: cidade || undefined, briefing, tipo, formato: 'feed_quadrado', etapa: it.etapa, cta_objetivo: 'perfil', mostrar_preco: false, logo: true, logo_pos: 'sup_dir' }),
+          body: JSON.stringify({ brand_id: BRAND_ID, produto_id: produtoId || undefined, cidade: cidade || undefined, briefing, tipo, formato: 'feed_quadrado', etapa: it.etapa, objetivo: 'organico', cta_objetivo: 'perfil', mostrar_preco: false, logo: true, logo_pos: 'sup_dir' }),
         })
         const data = await resp.json()
         if (!resp.ok) throw new Error(data.error || `Erro ${resp.status}`)

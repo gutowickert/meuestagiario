@@ -53,6 +53,7 @@ export interface GerarInput {
   mostrarPreco?: boolean // se pode citar preço/valores na peça (padrão: NÃO)
   etapa?: EtapaFunil | null // onde no funil essa peça entra — muda a estratégia da copy
   inteligencia?: unknown | null // Camada 3: dossiê "voz do cliente" do CRM (produto×cidade)
+  objetivo?: ObjetivoPeca | null // 'anuncio' (padrão) | 'organico' — muda tom, gancho e CTA
 }
 
 // ---- Etapa do funil (estratégia de campanha) ----
@@ -95,6 +96,32 @@ export function blocoEtapa(etapa: EtapaFunil): string {
     '- Urgência REAL e específica da turma: datas, cidade, vagas limitadas, começa em breve. Oferta clara. Quebre a ÚLTIMA objeção (tempo, dinheiro, medo de não dar conta).',
     '- Pode retomar o contato ("você viu a turma de {cidade} e ainda dá tempo"). CTA DIRETO e forte: garantir a vaga agora no WhatsApp.',
   ].join('\n')
+}
+
+// Objetivo da peça: ANÚNCIO (venda/resposta direta) ou ORGÂNICO (valor/conexão).
+export type ObjetivoPeca = 'anuncio' | 'organico'
+
+// Diretriz que transforma a peça em CONTEÚDO ORGÂNICO — muda tom, gancho e CTA.
+export function diretrizOrganico(): string {
+  return [
+    'ESTA PEÇA É CONTEÚDO ORGÂNICO — NÃO é anúncio. O objetivo é gerar VALOR, conexão e autoridade; construir audiência e relação — NÃO vender direto.',
+    '- PROIBIDO gancho de anúncio ("seu cliente está te procurando", "pare de perder vendas", "você paga e ninguém vem") e PROIBIDO oferta/urgência de venda ("garanta sua vaga", "últimas vagas", "acesse o site", "link na bio").',
+    '- Fale como GENTE DE VERDADE / dono da escola: história, bastidores, celebração, ensino, opinião, prova contada como CASO/HISTÓRIA. Autêntico, caloroso, humano — não vendedor.',
+    '- O GANCHO prende por curiosidade, emoção ou valor (não por dor de venda). Entregue algo que valha assistir/ler mesmo pra quem nunca vai comprar.',
+    '- CTA é LEVE e de RELACIONAMENTO: seguir pra acompanhar, salvar, comentar, marcar alguém — ou nenhuma chamada dura. NUNCA mande pro site/inscrição/WhatsApp de venda.',
+    '- Pode citar cursos/turmas com naturalidade (contexto da história), sem vender.',
+  ].join('\n')
+}
+
+// Etapa do funil relida pra ORGÂNICO (sem a moldura de anúncio da blocoEtapa).
+export function blocoEtapaOrganico(etapa: EtapaFunil): string {
+  if (etapa === 'descoberta') {
+    return 'ETAPA (orgânico): TOPO/DESCOBERTA — atrair gente nova com conteúdo que gera identificação, curiosidade ou valor rápido. Foco em alcance e primeira conexão. Zero venda.'
+  }
+  if (etapa === 'aquecimento') {
+    return 'ETAPA (orgânico): MEIO/AQUECIMENTO — aprofundar relação: ensinar de verdade, mostrar o método e os bastidores, provar com casos reais contados como história. Constrói autoridade e desejo, ainda sem vender.'
+  }
+  return 'ETAPA (orgânico): FUNDO — raro no orgânico. Reforço leve: depoimento/prova forte ou um convite natural pra quem já acompanha. Nada de oferta agressiva.'
 }
 
 // Pra onde a chamada final leva — orienta a copy do CTA (evita retrabalho).
@@ -285,17 +312,26 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
       : `entre ${tipo.minSlides} e ${tipo.maxSlides} slides`
 
   const ehAnuncioImagem = input.tipo === 'anuncio_imagem'
+  const organico = input.objetivo === 'organico'
 
-  // Regra específica de anúncio de imagem única: pouco texto forte na arte,
-  // copy pesada na legenda (feedback do Guto — a arte não é textão).
-  const regraAnuncio = [
-    'ESTA É UMA IMAGEM DE ANÚNCIO (peça única). O texto NA ARTE tem que ser MÍNIMO e IMPACTANTE:',
-    '- "titulo": uma HEADLINE curta e forte (idealmente ≤ 6 palavras) — a coisa que a pessoa PRECISA ver.',
-    '- "corpo": no MÁXIMO uma linha curta (≤ 10 palavras) de apoio/oferta — ou vazio. NADA de parágrafo.',
-    '- "topicos": VAZIO. "destaque": vazio (não é usado na arte de anúncio).',
-    '- Toda a persuasão (dor, oferta, prova, urgência e o CTA) vai na LEGENDA, que deve ser uma COPY DE ANÚNCIO completa e forte.',
-    'Use papel "gancho" no slide único.',
-  ].join('\n')
+  // Regra específica de imagem única: pouco texto forte na arte, copy na legenda.
+  const regraAnuncio = organico
+    ? [
+        'ESTA É UMA IMAGEM DE POST ORGÂNICO (peça única). O texto NA ARTE tem que ser MÍNIMO e com apelo de CONTEÚDO (não de venda):',
+        '- "titulo": uma frase curta e forte (idealmente ≤ 6 palavras) que dá vontade de ler — curiosidade/valor/emoção, não oferta.',
+        '- "corpo": no MÁXIMO uma linha curta (≤ 10 palavras) — ou vazio. NADA de parágrafo.',
+        '- "topicos": VAZIO. "destaque": vazio.',
+        '- O conteúdo/história e o convite leve vão na LEGENDA, com voz humana (não é anúncio).',
+        'Use papel "gancho" no slide único.',
+      ].join('\n')
+    : [
+        'ESTA É UMA IMAGEM DE ANÚNCIO (peça única). O texto NA ARTE tem que ser MÍNIMO e IMPACTANTE:',
+        '- "titulo": uma HEADLINE curta e forte (idealmente ≤ 6 palavras) — a coisa que a pessoa PRECISA ver.',
+        '- "corpo": no MÁXIMO uma linha curta (≤ 10 palavras) de apoio/oferta — ou vazio. NADA de parágrafo.',
+        '- "topicos": VAZIO. "destaque": vazio (não é usado na arte de anúncio).',
+        '- Toda a persuasão (dor, oferta, prova, urgência e o CTA) vai na LEGENDA, que deve ser uma COPY DE ANÚNCIO completa e forte.',
+        'Use papel "gancho" no slide único.',
+      ].join('\n')
 
   const regraCarrossel = [
     'Estruture os slides com papéis claros (gancho -> desenvolvimento/prova -> cta). O primeiro slide é o gancho.',
@@ -317,12 +353,15 @@ function mensagemUsuario(brand: Brand, input: GerarInput): string {
 
   return [
     `Gere uma peça do tipo "${tipo.nome}" (${nslides}) no formato ${formato.nome} (${formato.proporcao}, ${formato.largura}x${formato.altura}px).`,
-    input.etapa ? blocoEtapa(input.etapa) : '',
+    organico ? diretrizOrganico() : '',
+    input.etapa ? (organico ? blocoEtapaOrganico(input.etapa) : blocoEtapa(input.etapa)) : '',
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
     input.produto ? `Produto alvo: ${input.produto.nome} (veja "PRODUTO EM FOCO" no contexto).` : '',
-    input.ctaObjetivo
-      ? `OBJETIVO DO CTA: a chamada (na arte quando fizer sentido, e no fim da legenda) deve levar a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
-      : '',
+    organico
+      ? 'CTA: só de RELACIONAMENTO (seguir, salvar, comentar, marcar alguém) ou sem chamada dura. NUNCA "acesse o site / link na bio / garanta sua vaga".'
+      : input.ctaObjetivo
+        ? `OBJETIVO DO CTA: a chamada (na arte quando fizer sentido, e no fim da legenda) deve levar a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
+        : '',
     '',
     'BRIEFING:',
     input.briefing,

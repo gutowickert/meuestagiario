@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     if (!body || typeof body !== 'object') {
       return Response.json({ error: 'Corpo inválido: envie um JSON.' }, { status: 400 })
     }
-    const { brand_id, produto_id, turma_id, cidade, briefing, situacao, cta_objetivo, etapa, mostrar_preco } =
+    const { brand_id, produto_id, turma_id, cidade, briefing, situacao, cta_objetivo, etapa, mostrar_preco, objetivo } =
       body as Record<string, unknown>
 
     if (typeof brand_id !== 'string' || !brand_id) {
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       mostrarPreco: mostrar_preco === true,
       exemplosAprovados,
       inteligencia,
+      objetivo: objetivo === 'organico' ? 'organico' : 'anuncio',
     }
 
     const roteiro = await gerarRoteiro(brand, input)

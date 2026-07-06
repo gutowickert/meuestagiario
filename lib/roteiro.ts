@@ -12,10 +12,13 @@ import {
   blocoProduto,
   blocoExemplos,
   blocoEtapa,
+  blocoEtapaOrganico,
   blocoInteligencia,
+  diretrizOrganico,
   CTA_INSTRUCAO,
   type Atributos,
   type EtapaFunil,
+  type ObjetivoPeca,
 } from './generate'
 
 // ---- Saída ----
@@ -44,6 +47,7 @@ export interface RoteiroInput {
   mostrarPreco?: boolean
   exemplosAprovados?: { gancho: string; legenda: string }[]
   inteligencia?: unknown | null // Camada 3: dossiê "voz do cliente" do CRM
+  objetivo?: ObjetivoPeca | null // 'anuncio' (padrão) | 'organico'
 }
 
 // ---- Schema (structured output) ----
@@ -85,7 +89,19 @@ const ROTEIRO_SCHEMA: Record<string, unknown> = {
   required: ['duracao', 'blocos', 'legenda', 'hashtags', 'atributos'],
 }
 
-function instrucaoSistema(): string {
+function instrucaoSistema(organico: boolean): string {
+  if (organico) {
+    return [
+      'Você é um CRIADOR DE CONTEÚDO (não um vendedor) que escreve roteiros de Reels ORGÂNICOS pra escola.',
+      'Escreve roteiro FALADO: o que a pessoa diz na câmera, natural, humano, em pt-BR falado.',
+      'Regras de ouro do orgânico:',
+      '- O GANCHO (primeiros ~3s) prende por curiosidade, emoção, história ou valor — NUNCA por gancho de anúncio/venda.',
+      '- Ritmo natural, frases curtas, uma ideia por bloco. 20-60s.',
+      '- Entregue algo que valha assistir mesmo pra quem nunca vai comprar. Termine com um convite LEVE de relacionamento (ou sem CTA duro).',
+      '- A LEGENDA complementa e aprofunda com a mesma voz humana — não é anúncio.',
+      'Devolva SEMPRE no schema estruturado.',
+    ].join('\n')
+  }
   return [
     'Você é um ROTEIRISTA de vídeos curtos verticais (Reels/anúncios) e copywriter sênior de resposta direta.',
     'Escreve roteiro FALADO: o que a pessoa diz na câmera, natural, em pt-BR falado (não travado, não corporativo).',
@@ -99,14 +115,18 @@ function instrucaoSistema(): string {
 }
 
 function mensagemUsuario(input: RoteiroInput): string {
+  const organico = input.objetivo === 'organico'
   return [
-    'Crie um ROTEIRO de vídeo vertical curto (Reel) para ANÚNCIO.',
-    input.etapa ? blocoEtapa(input.etapa) : '',
+    organico ? 'Crie um ROTEIRO de vídeo vertical curto (Reel) de CONTEÚDO ORGÂNICO.' : 'Crie um ROTEIRO de vídeo vertical curto (Reel) para ANÚNCIO.',
+    organico ? diretrizOrganico() : '',
+    input.etapa ? (organico ? blocoEtapaOrganico(input.etapa) : blocoEtapa(input.etapa)) : '',
     input.cidade ? `Cidade/turma alvo: ${input.cidade}.` : '',
     input.produto ? `Produto alvo: ${input.produto.nome} (veja "PRODUTO EM FOCO").` : '',
-    input.ctaObjetivo
-      ? `OBJETIVO DO CTA: leve a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
-      : '',
+    organico
+      ? 'CTA: apenas de RELACIONAMENTO (seguir, salvar, comentar, marcar alguém) ou sem chamada dura. NÃO mande pro site/inscrição/WhatsApp.'
+      : input.ctaObjetivo
+        ? `OBJETIVO DO CTA: leve a pessoa a ${CTA_INSTRUCAO[input.ctaObjetivo] ?? input.ctaObjetivo}.`
+        : '',
     '',
     'BRIEFING:',
     input.briefing,
@@ -115,7 +135,7 @@ function mensagemUsuario(input: RoteiroInput): string {
       ? `CENA/SITUAÇÃO que o usuário tem pra gravar (o roteiro DEVE caber nisso): ${input.situacao.trim()}`
       : 'CENA: o usuário não descreveu — proponha um formato simples e realista de gravar (ex.: falando direto pra câmera). A fala tem que funcionar sozinha, sem depender de imagem específica.',
     '',
-    'FORMATO DA SAÍDA: blocos falados com janela de tempo (o 1º é o gancho, o último é o CTA) + a legenda do anúncio. NÃO descreva cenas/planos/edição — só a FALA e o tempo.',
+    `FORMATO DA SAÍDA: blocos falados com janela de tempo (o 1º é o gancho, o último é o ${organico ? 'convite leve/fecho' : 'CTA'}) + a legenda. NÃO descreva cenas/planos/edição — só a FALA e o tempo.`,
     input.mostrarPreco
       ? 'PREÇO: pode citar preço/valores se fizer sentido pra oferta.'
       : 'PREÇO: NÃO cite preço, valores, "R$" nem parcelas. Foque em valor, resultado e transformação.',
@@ -130,7 +150,7 @@ export async function gerarRoteiro(brand: Brand, input: RoteiroInput): Promise<R
   const anthropic = getAnthropic()
 
   const system: { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }[] = [
-    { type: 'text', text: instrucaoSistema() },
+    { type: 'text', text: instrucaoSistema(input.objetivo === 'organico') },
     { type: 'text', text: blocoMarca(brand), cache_control: { type: 'ephemeral' } },
   ]
   const prod = blocoProduto(input.produto)

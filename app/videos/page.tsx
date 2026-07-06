@@ -50,6 +50,7 @@ export default function Videos() {
   const [produto, setProduto] = useState('')
   const [cidade, setCidade] = useState('Caxias do Sul')
   const [etapa, setEtapa] = useState<'descoberta' | 'aquecimento' | 'remarketing'>('descoberta')
+  const [objetivo, setObjetivo] = useState<'anuncio' | 'organico'>('anuncio')
   const [ctaObjetivo, setCtaObjetivo] = useState('whatsapp')
   const [mostrarPreco, setMostrarPreco] = useState(false)
   const [briefing, setBriefing] = useState('')
@@ -78,6 +79,7 @@ export default function Videos() {
         situacao: opts.situacao || undefined,
         cta_objetivo: ctaObjetivo,
         etapa,
+        objetivo,
         mostrar_preco: mostrarPreco,
       }),
     })
@@ -149,9 +151,9 @@ export default function Videos() {
         <header className="mb-8 flex items-end justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Vídeos <span className="text-violet-400">— copy de anúncio</span>
+              Vídeos <span className="text-violet-400">— roteiro</span>
             </h1>
-            <p className="mt-1 text-neutral-400">Roteiro falado + legenda. Gere 3 ângulos ou descreva a cena e gere 1.</p>
+            <p className="mt-1 text-neutral-400">Roteiro falado + legenda, pra <b>anúncio</b> ou <b>orgânico</b>. Gere 3 ângulos ou descreva a cena e gere 1.</p>
           </div>
           <div className="flex gap-4 text-sm">
             <Link href="/" className="text-violet-300 hover:text-violet-200">Studio</Link>
@@ -186,6 +188,31 @@ export default function Videos() {
                 placeholder="Ex.: Caxias do Sul"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-neutral-300">Tipo de vídeo</label>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { id: 'anuncio', nome: 'Anúncio', hint: 'Resposta direta: gancho de venda, CTA pra site/WhatsApp/inscrição.' },
+                { id: 'organico', nome: 'Orgânico', hint: 'Conteúdo de valor/história/bastidor. Sem venda dura; CTA leve (seguir/salvar/comentar).' },
+              ] as const).map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => setObjetivo(o.id)}
+                  title={o.hint}
+                  className={`rounded-lg border px-3 py-1.5 text-sm transition ${
+                    objetivo === o.id ? 'border-violet-500 bg-violet-950 text-violet-200' : 'border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+                  }`}
+                >
+                  {o.nome}
+                </button>
+              ))}
+            </div>
+            {objetivo === 'organico' ? (
+              <p className="mt-1 text-xs text-neutral-500">Orgânico: sem gancho de venda nem “link na bio”. O CTA (abaixo) é ignorado — vira convite leve.</p>
+            ) : null}
           </div>
 
           <div>
