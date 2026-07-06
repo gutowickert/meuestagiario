@@ -236,6 +236,7 @@ export default function Turmas() {
           </div>
           <div className="flex gap-4 text-sm">
             <Link href="/chat" className="text-violet-300 hover:text-violet-200">Conversa</Link>
+            <Link href="/planejador" className="text-violet-300 hover:text-violet-200">Planejador</Link>
             <Link href="/videos" className="text-violet-300 hover:text-violet-200">Vídeos</Link>
             <Link href="/repositorio" className="text-violet-300 hover:text-violet-200">Repositório</Link>
             <Link href="/" className="text-violet-300 hover:text-violet-200">Studio →</Link>

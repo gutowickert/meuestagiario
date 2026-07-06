@@ -136,6 +136,7 @@ export default function Repositorio() {
           <div className="flex gap-4 text-sm">
             <Link href="/" className="text-violet-300 hover:text-violet-200">Studio</Link>
             <Link href="/turmas" className="text-violet-300 hover:text-violet-200">Turmas</Link>
+            <Link href="/planejador" className="text-violet-300 hover:text-violet-200">Planejador</Link>
             <Link href="/videos" className="text-violet-300 hover:text-violet-200">Vídeos</Link>
           </div>
         </header>
