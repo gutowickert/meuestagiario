@@ -254,6 +254,7 @@ export function blocoProduto(produto: Produto | null | undefined): string | null
       null,
       2,
     ),
+    'TERMINOLOGIA: refira-se ao produto pelo NOME/categoria reais (curso, formação ou imersão, conforme o nome). São CURSOS presenciais — NUNCA invente rótulos como "workshop", "minicurso", "palestra" ou "mentoria".',
   ].join('\n')
 }
 

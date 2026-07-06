@@ -53,7 +53,7 @@ function sistema(brand: Brand, produtos: Produto[]): string {
     '',
     'REGRAS:',
     '- Uma entrada da saída = UMA turma (um bloco de código). Preserve o código EXATAMENTE como veio (minúsculas/maiúsculas incluídas).',
-    '- ANL costuma ser workshop de ~3 dias. FC é a formação com 4 módulos (Estratégia Digital, Design Digital, Videomaker Mobile, Gestor de Tráfego), cada um com suas datas/professor — resuma as datas do módulo inicial ao final em "datas".',
+    '- ANL costuma ser um CURSO presencial de ~3 dias (chame de "curso", NUNCA de "workshop"). FC é a formação com 4 módulos (Estratégia Digital, Design Digital, Videomaker Mobile, Gestor de Tráfego), cada um com suas datas/professor — resuma as datas do módulo inicial ao final em "datas".',
     '- "cidade" em nome próprio legível (ex.: "Porto Alegre", "Novo Hamburgo", "Caxias do Sul", "Santa Cruz do Sul", "Lajeado").',
     '- "preco": só o que estiver escrito, formatado "R$ X,XX". Vazio se não houver. NÃO invente.',
     '- "professor"/"local": vazio se não constar. Não invente.',
