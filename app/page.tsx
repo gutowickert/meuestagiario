@@ -234,6 +234,7 @@ export default function Studio() {
               Vídeos
             </Link>
             <Link href="/repositorio" className="text-violet-300 hover:text-violet-200">Repositório</Link>
+            <Link href="/resultados" className="text-violet-300 hover:text-violet-200">Resultados</Link>
             <Link href="/contexto" className="text-violet-300 hover:text-violet-200">
               Contexto da marca →
             </Link>

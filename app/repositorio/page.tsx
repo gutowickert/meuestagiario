@@ -138,6 +138,7 @@ export default function Repositorio() {
             <Link href="/turmas" className="text-violet-300 hover:text-violet-200">Turmas</Link>
             <Link href="/planejador" className="text-violet-300 hover:text-violet-200">Planejador</Link>
             <Link href="/videos" className="text-violet-300 hover:text-violet-200">Vídeos</Link>
+            <Link href="/resultados" className="text-violet-300 hover:text-violet-200">Resultados</Link>
           </div>
         </header>
 

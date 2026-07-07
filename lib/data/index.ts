@@ -30,3 +30,4 @@ export {
   type MidiaInsert,
 } from './midias'
 export { getDossieCliente, type DossieCliente } from './inteligencia'
+export { getPerformancePorPeca, type PerfPeca } from './performance'

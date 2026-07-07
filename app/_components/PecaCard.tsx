@@ -43,6 +43,7 @@ export function PecaCard({
   const [erro, setErro] = useState<string | null>(null)
   const [feito, setFeito] = useState<'aprovado' | 'rejeitado' | null>(estadoInicial ?? null)
   const [enviandoFb, setEnviandoFb] = useState(false)
+  const [copiouUtm, setCopiouUtm] = useState(false)
 
   async function feedback(acao: 'aprovar' | 'rejeitar') {
     const motivo = acao === 'rejeitar' ? window.prompt('Por que não ficou bom? (opcional)') ?? undefined : undefined
@@ -97,9 +98,17 @@ export function PecaCard({
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
       <div className="mb-3 flex flex-wrap gap-2 text-xs text-neutral-400">
-        <span className="rounded-full bg-neutral-800 px-2.5 py-1">
-          content_id: <code className="text-violet-300">{result.content_id}</code>
-        </span>
+        <button
+          onClick={() => {
+            void navigator.clipboard?.writeText(result.content_id)
+            setCopiouUtm(true)
+            setTimeout(() => setCopiouUtm(false), 1500)
+          }}
+          title="Copiar pra colar como utm_content nos parâmetros de URL do anúncio (Meta)"
+          className="rounded-full bg-neutral-800 px-2.5 py-1 hover:bg-neutral-700"
+        >
+          {copiouUtm ? '✓ copiado' : '⧉ utm_content'}: <code className="text-violet-300">{result.content_id}</code>
+        </button>
         {result.assets.inteligencia ? (
           <span className="rounded-full bg-emerald-950 px-2.5 py-1 text-emerald-300" title="Usou o dossiê de voz do cliente do CRM (Camada 3)">
             🧠 voz do cliente
